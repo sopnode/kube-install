@@ -143,7 +143,8 @@ function create-cluster() {
 }
 
 function cluster-init() {
-    hostnamectl set-hostname kube-master
+    # clearly only a convenience...
+    # hostnamectl set-hostname kube-master
     kubeadm config images pull
     # xxx I don't get how this comes back into force, but...
     swapoff -a
