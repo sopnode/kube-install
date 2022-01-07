@@ -1,26 +1,30 @@
+########## pseudo docstrings
+MYDIR=$(dirname $(readlink -f $BASH_SOURCE))
+# for the mac where readlink has no -f option
+[ -z "$MYDIR" ] && MYDIR=$(dirname $BASH_SOURCE)
+[ -z "$_sourced_r2labutils" ] && source ${MYDIR}/r2labutils.sh
+
+create-doc-category kube "commands to manage the kube cluster"
+
+
+##################################################### imaging
+
 ## references
 
 ### fedora
 
-# our version: f34
+# our version: f35
 # https://kubernetes.io/docs/setup/production-environment/container-runtimes/#cri-o
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
-### ubuntu
+# still needed afterwards is tweaking your firewall
+
+### ubuntu - no longer supported
 
 # our version: 21.04
 # https://www.techrepublic.com/article/how-to-install-kubernetes-on-ubuntu-server-without-docker/
 
-####
-# how to push this initially
-# for n in vnode0{0,1,2}; do rsync -rltpi kube-install.sh $(plr $n):; done
-
-# TODO
-#
-# * explore setting $KUBECONFIG as per
-# https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/
-
-# silence apt install, esp. painful about kernel upgrades, that won't reboot on their own
+# * silence apt install, esp. painful about kernel upgrades, that won't reboot on their own
 # (as if it could reboot...)
 export DEBIAN_FRONTEND=noninteractive
 
@@ -33,7 +37,7 @@ function prepare() {
     # # xxx probably needs to be mode more permanent
     # NOTE 2: trying to mask services marked as swap looked promising
     # but not quite right
-    touch touch /etc/systemd/zram-generator.conf
+    touch /etc/systemd/zram-generator.conf
     swapoff -a
 
     cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
@@ -141,6 +145,7 @@ function create-cluster() {
     tail -2 $ADMIN_LOG
     echo "=========="
 }
+doc-kube create-cluster "start a kube cluster with the current node as a master"
 
 function cluster-init() {
     # clearly only a convenience...
@@ -150,7 +155,7 @@ function cluster-init() {
     swapoff -a
     kubeadm init --pod-network-cidr=10.244.0.0/16 > $ADMIN_LOG 2>&1
 
-    mkdir ~/.kube
+    [ -d ~/.kube ] || mkdir ~/.kube
     cp /etc/kubernetes/admin.conf ~/.kube/config
     chown root:root ~/.kube/config
 }
@@ -172,12 +177,6 @@ function cluster-networking-calico() {
 }
 function cluster-networking-weave() {
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-}
-
-
-# nodes
-function join-cluster() {
-    echo "join-cluster: YOU NEED TO COPY-PASTE for now"
 }
 
 
@@ -203,6 +202,7 @@ EOF
     systemctl enable --now kubeproxy8001
     echo kube proxy running on port:8001
 }
+doc-kube setup-kubeproxy "create and start a kubeproxy service on port 8001"
 
 
 # all nodes
@@ -228,10 +228,41 @@ function hello-world() {
     # get the LoadBalancer ip address.
     kubectl get svc hello-kubernetes-hello-world -n hello-kubernetes -o 'jsonpath={ .status.loadBalancer.ingress[0].ip }'
 }
+doc-kube hello-world "deploy the hello-world app"
+
+###
+
+# nodes
+function join-cluster() {
+    echo "join-cluster: 
+for now YOU NEED TO COPY-PASTE the output of
+$0 show-join
+on your master node"
+}
+doc-kube join-cluster "worker node: join the cluster - but not implemented"
+
+# on the master, for the nodes
+function show-join() {
+    tail -2 $ADMIN_LOG
+}
+doc-kube show-join "master node: display the command for the workers to join"
+
+function unjoin-cluster() {
+    kubeadm reset
+    echo "you might want to also run on your master something like
+kubectl drain --ignore-daemonsets $(hostname)
+kubectl delete nodes $(hostname)
+"
+}
+doc-kube unjoin-cluster "worker node: quit the cluster"
+
 
 
 for subcommand in "$@"; do
-    $subcommand
+    case "$subcommand" in
+        help|--help) help-kube; exit 1;;
+        *) $subcommand
+    esac
 done
 
 # - on a master, do
