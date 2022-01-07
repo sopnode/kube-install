@@ -75,6 +75,7 @@ function install-extras() {
 function install-k8s() {
     [ -f /etc/fedora-release ] && fedora-install-k8s
     [ -f /etc/lsb-release ]    && ubuntu-install-k8s
+    fetch-kube-images
 }
 
 
@@ -132,6 +133,18 @@ function ubuntu-install-k8s() {
     apt update && apt -y install kubelet kubeadm kubectl
 }
 
+##################################################### in-between 
+# should be done in the image, but early images do not have it
+# plus, this probably refreshes the latests image so it makes sense at run-time too
+
+function fetch-kube-images() {
+    kubeadm config images pull
+}
+doc-kube fetch-kube-images "retrieve kube core images from dockerhub or similar"
+
+
+##################################################### run-time
+
 
 # master only
 # the *`kubeadm init ..`* command issues a *`kubeadm join`* command that must be copied/pasted ...
@@ -150,7 +163,9 @@ doc-kube create-cluster "start a kube cluster with the current node as a master"
 function cluster-init() {
     # clearly only a convenience...
     # hostnamectl set-hostname kube-master
-    kubeadm config images pull
+
+    fetch-kube-images
+
     # xxx I don't get how this comes back into force, but...
     swapoff -a
     kubeadm init --pod-network-cidr=10.244.0.0/16 > $ADMIN_LOG 2>&1
