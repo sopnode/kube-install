@@ -329,8 +329,10 @@ doc-kube hello-world "deploy the hello-world app"
 # nodes
 function join-cluster() {
     local master="$1"
-    fetch="ssh $master kube-install/kube-install.sh show-join"
-    command=$($fetch)
+    local fetch="ssh $master kube-install/kube-install.sh show-join"
+    local command=$($fetch)
+    # somehow the backslash stands in the way
+    command=$(sed -e 's/\\//' <<< $command)
     if [ -n "$command" ]; then
         echo "Running $command"
         $command
