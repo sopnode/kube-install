@@ -1,11 +1,13 @@
 ########## pseudo docstrings
 MYDIR=$(dirname $(readlink -f $BASH_SOURCE))
-cd $MYDIR
 
 # for the mac where readlink has no -f option
 [ -z "$MYDIR" ] && MYDIR=$(dirname $BASH_SOURCE)
 [ -z "$_sourced_r2labutils" ] && source ${MYDIR}/r2labutils.sh
 
+cd $MYDIR
+
+create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
 
 
@@ -54,23 +56,41 @@ net.bridge.bridge-nf-call-iptables = 1
 EOF
     sysctl -p /etc/sysctl.d/k8s.conf
 }
+doc-install prepare "miscell system-wide required settings"
+
 
 function update-os() {
     [ -f /etc/fedora-release ] && dnf -y update
     [ -f /etc/lsb-release ]    && apt -y update
 }
+doc-install update-os "dnf or apt update"
+
 
 function install() {
     install-k8s
     install-extras
     install-helm
 }
+doc-install install "meta-target to install k8s, extras and helm"
+
 
 # all nodes
 function install-extras() {
     [ -f /etc/fedora-release ] && dnf -y install git openssl netcat jq buildah
     [ -f /etc/lsb-release ]    && apt -y install git openssl netcat # jq
 }
+doc-install install-extras "useful tools"
+
+
+# all nodes
+function install-helm() {
+    cd
+    [ -f /etc/fedora-release ] && dnf -y install openssl
+    curl -fsSL -o install-helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    bash install-helm.sh
+    helm version
+}
+doc-install install-helm "install helm"
 
 
 # all nodes
@@ -79,6 +99,7 @@ function install-k8s() {
     [ -f /etc/lsb-release ]    && ubuntu-install-k8s
     fetch-kube-images
 }
+doc-install install "install kubernets core"
 
 
 function fedora-install-k8s() {
@@ -147,7 +168,6 @@ doc-kube fetch-kube-images "retrieve kube core images from dockerhub or similar"
 
 ##################################################### run-time
 
-
 # master only
 # the *`kubeadm init ..`* command issues a *`kubeadm join`* command that must be copied/pasted ...
 ADMIN_LOG=$MYDIR/kubeadm-init.log
@@ -162,6 +182,7 @@ function create-cluster() {
 }
 doc-kube create-cluster "start a kube cluster with the current node as a master"
 
+
 function cluster-init() {
 
     # tmp xxx reinstate when not in devel mode
@@ -170,29 +191,47 @@ function cluster-init() {
     swapoff -a
 
     # spot the config file for that host
-    local localconfigin="${MYDIR}/$(hostname)-config.sh.in"
-    local localconfig="${MYDIR}/$(hostname)-config.sh"
-
-    local kubeadm_token=$(kubeadm token generate)
+    local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
 
     if [ ! "$localconfig" ]; then
-        echo "local config file $localconfigin not found - aborting"
+        echo "local config file $localconfig not found - aborting"
         exit 1
     fi
+
     # set -a / set +a is for exporting the variables
-    ( echo 'set -a';
-      cat $localconfigin;
-      echo "KUBEADM_TOKEN=\"$kubeadm_token\"";
-      echo 'set +a') > $localconfig
+    set -a; source $localconfig; set +a
 
-    source $localconfig
-
-    local output_dir=$(realpath -m ./_clusters/${K8S_CLUSTER_NAME})
-    export LOCAL_CERTS_DIR=${output_dir}/pki
+    local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
     mkdir -p ${output_dir}
 
+    export LOCAL_CERTS_DIR=${output_dir}/pki
+    export KUBEADM_TOKEN="$(kubeadm token generate)"
 
-    # get - and export - cert
+    # we'll need to run this several times
+    # as we compute more and more variables
+    local kubeadm_config1=/etc/kubernetes/kubeadm-init-config+certsdir.yaml
+    local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
+
+    function generate_etc_configs() {
+        # install our config files
+        local tmpl
+        for tmpl in $MYDIR/yaml/*.yaml.in; do
+            local b=$(basename $tmpl .in)
+            # echo "refreshing /etc/kubernetes/$b"
+            envsubst < $tmpl > /etc/kubernetes/$b
+        done
+        # generate the version without certificatesDir
+        # define for future use
+        sed '/certificatesDir:/d' $kubeadm_config1 > $kubeadm_config2
+    }
+
+    # generate a first time to be able to invoke certificate generation
+    generate_etc_configs
+
+    # generate certificates
+    kubeadm init phase certs all --config $kubeadm_config1 > $ADMIN_LOG 2>&1
+
+    # compute cert hash
     export CA_CERT_HASH=$( \
         openssl x509 -pubkey -in ${LOCAL_CERTS_DIR}/ca.crt \
         | openssl rsa -pubin -outform der 2>/dev/null \
@@ -209,28 +248,11 @@ function cluster-init() {
     CA_DATA_B64=$(base64 -w0  < $LOCAL_CERTS_DIR/ca.crt)
     set +a
 
-    # install our config files
-    local tmpl
-    for tmpl in $MYDIR/yaml/*.yaml.in; do
-        local b=$(basename $tmpl .in)
-        echo "refreshing /etc/kubernetes/$b"
-        envsubst < $tmpl > /etc/kubernetes/$b
-    done
-
-    # generate the version without certificatesDir
-    sed '/certificatesDir:/d' \
-       /etc/kubernetes/kubeadm-init-config+certsdir.yaml \
-       > /etc/kubernetes/kubeadm-init-config.yaml \
-
-    # define for future use
-    local kubeadm_config1=/etc/kubernetes/kubeadm-init-config+certsdir.yaml
-    local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
-
-    # generate certificates
-    kubeadm init phase certs all --config $kubeadm_config1 > $ADMIN_LOG 2>&1
-
     # copy certificates in /etc
     rsync -a ${LOCAL_CERTS_DIR}/ /etc/kubernetes/pki/
+
+    # ----------
+    # this is the first and only command that actually does something
 
     kubeadm init --skip-phases certs --config $kubeadm_config2 >> $ADMIN_LOG 2>&1
 
@@ -239,9 +261,11 @@ function cluster-init() {
     chown root:root ~/.kube/config
 }
 
+
 function cluster-networking() {
     cluster-networking-flannel
 }
+
 
 # various options for the networking
 # flannel -- https://gist.github.com/rkaramandi/44c7cea91501e735ea99e356e9ae7883
@@ -284,16 +308,6 @@ EOF
 doc-kube setup-kubeproxy "create and start a kubeproxy service on port 8001"
 
 
-# all nodes
-function install-helm() {
-    cd
-    [ -f /etc/fedora-release ] && dnf -y install openssl
-    curl -fsSL -o install-helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-    bash install-helm.sh
-    helm version
-}
-
-
 ## testing with hello-kubernetes (master only)
 function hello-world() {
     cd
@@ -311,38 +325,63 @@ doc-kube hello-world "deploy the hello-world app"
 
 ###
 
+
 # nodes
 function join-cluster() {
-    echo "join-cluster:
-for now YOU NEED TO COPY-PASTE the output of
-$0 show-join
-on your master node"
+    local master="$1"
+    fetch="ssh $master kube-install/kube-install.sh show-join"
+    command=$($fetch)
+    if [ -n "$command" ]; then
+        echo "Running $command"
+        $command
+    else
+        echo "ERROR: join-cluster:
+was not able to find the join command using 
+$fetch"
+        exit 1
+    fi
 }
-doc-kube join-cluster "worker node: join the cluster - but not implemented"
+doc-kube join-cluster "worker node: join the cluster (master hostname as 1st arg)"
+
 
 # on the master, for the nodes
 function show-join() {
-    tail -2 $ADMIN_LOG
+    # xxx could be a little more paranoid 
+    # and check the token is still valid
+    if [ -f $ADMIN_LOG ]; then
+        tail -2 $ADMIN_LOG
+    else
+        1>&2 echo "this command is intended to be run on the master node"
+        exit 1
+    fi
 }
 doc-kube show-join "master node: display the command for the workers to join"
 
-function unjoin-cluster() {
+
+function kube-teardown() {
+    cd $MYDIR
+    source configs/$(hostname --short)-config.sh
+    local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
+
+    echo "You're going to have to answer 'yes' here"
     kubeadm reset
+    rm -rf ${output_dir}
+    rm -rf /etc/kubernetes/*
     echo "you might want to also run on your master something like
 kubectl drain --ignore-daemonsets $(hostname)
 kubectl delete nodes $(hostname)
 "
 }
-doc-kube unjoin-cluster "worker node: quit the cluster"
+doc-kube kube-teardown "undo create-cluster or kubeadm join - use with care..."
 
 
 
 for subcommand in "$@"; do
     case "$subcommand" in
-        help|--help) help-kube; exit 1;;
-        *) $subcommand
+        help|--help) help-install; help-kube; exit 1;;
     esac
 done
+"$@"
 
 # - on a master, do
 # [update-os] install prepare create-cluster setup-kubeproxy

@@ -17,7 +17,7 @@ function create-doc-category () {
     # initialize docstring for this category
     varname=_doc_$category
     # initialize docstring with rest of arguments to create-doc-category
-    assign="$varname=\"#################### R2lab: $@\""
+    assign="$varname=\"#################### sopnode: $@\""
     eval "$assign"
     # define help-<> function
     defun="function help-$category() { echo -e \$$varname; }"
