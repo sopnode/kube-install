@@ -28,6 +28,16 @@ create-doc-category kube "commands to manage the kube cluster"
 # our version: 21.04
 # https://www.techrepublic.com/article/how-to-install-kubernetes-on-ubuntu-server-without-docker/
 
+### miscell
+
+# setting up konnectivity
+# https://kubernetes.io/docs/tasks/extend-kubernetes/setup-konnectivity/
+# (gives the gist of it, but a lot is implicit)
+
+# using kubeadm with config files
+# https://medium.com/@kosta709/kubernetes-by-kubeadm-config-yamls-94e2ee11244
+
+
 # * silence apt install, esp. painful about kernel upgrades, that won't reboot on their own
 # (as if it could reboot...)
 export DEBIAN_FRONTEND=noninteractive
@@ -228,8 +238,8 @@ function cluster-init() {
     # generate a first time to be able to invoke certificate generation
     generate_etc_configs
 
-    # generate certificates
-    kubeadm init phase certs all --config $kubeadm_config1 > $ADMIN_LOG 2>&1
+    # generate certificates (overwrite ADMIN_LOG)
+    kubeadm init phase certs all --config $kubeadm_config1 2>&1 | tee $ADMIN_LOG
 
     # compute cert hash
     export CA_CERT_HASH=$( \
@@ -254,7 +264,22 @@ function cluster-init() {
     # ----------
     # this is the first and only command that actually does something
 
-    kubeadm init --skip-phases certs --config $kubeadm_config2 >> $ADMIN_LOG 2>&1
+    # do stuff phase by phase so we can inject konnectivity as a static pod
+    function phase() {
+        kubeadm init phase "$@" --config $kubeadm_config2 2>&1 | tee -a $ADMIN_LOG
+    }
+    phase preflight
+    phase kubeconfig all
+    phase kubelet-start
+    phase control-plane all
+    phase etcd local
+    phase upload-config all
+    phase upload-certs
+    phase mark-control-plane
+    phase bootstrap-token
+    phase kubelet-finalize all
+    phase addon all
+
 
     [ -d ~/.kube ] || mkdir ~/.kube
     cp /etc/kubernetes/admin.conf ~/.kube/config
@@ -338,7 +363,7 @@ function join-cluster() {
         $command
     else
         echo "ERROR: join-cluster:
-was not able to find the join command using 
+was not able to find the join command using
 $fetch"
         exit 1
     fi
@@ -348,7 +373,7 @@ doc-kube join-cluster "worker node: join the cluster (master hostname as 1st arg
 
 # on the master, for the nodes
 function show-join() {
-    # xxx could be a little more paranoid 
+    # xxx could be a little more paranoid
     # and check the token is still valid
     if [ -f $ADMIN_LOG ]; then
         tail -2 $ADMIN_LOG
