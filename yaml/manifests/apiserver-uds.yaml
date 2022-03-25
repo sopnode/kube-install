@@ -1,0 +1,13 @@
+# a piece of config targetting the apiserver
+
+spec:
+  containers:
+    volumeMounts:
+    - name: konnectivity-uds
+      mountPath: /etc/kubernetes/konnectivity-server
+      readOnly: false
+  volumes:
+  - name: konnectivity-uds
+    hostPath:
+      path: /etc/kubernetes/konnectivity-server
+      type: DirectoryOrCreate

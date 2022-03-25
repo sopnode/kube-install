@@ -10,6 +10,14 @@ cd $MYDIR
 create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
 
+function emergency-exit() {
+    echo EMERGENCY; exit 1
+}
+
+function breakpoint() {
+    echo -n "BREAKPOINT - type Enter when done ... "
+    read _
+}
 
 ##################################################### imaging
 
@@ -261,9 +269,20 @@ function cluster-init() {
     # copy certificates in /etc
     rsync -a ${LOCAL_CERTS_DIR}/ /etc/kubernetes/pki/
 
-    # ----------
-    # this is the first and only command that actually does something
+    function patch-apiserver-manifest() {
+        # xxx would be nice to automatically inject the contents of
+        # yaml/manifests/apiserver-uds.yaml
+        # into what kubeadm init has created in
+        # /etc/kubernetes/manifests/kube-apiserver.yaml
+        # NOTE: this is not just a simple dictionary merge
+        # because in the apiserver containers key there
+        # actually is a list... 
+        # for now this has been done manually
+        cp $MYDIR/yaml/manifests/kube-apiserver+uds.yaml \
+           /etc/kubernetes/manifests/kube-apiserver.yaml
+    }
 
+    # ----------
     # do stuff phase by phase so we can inject konnectivity as a static pod
     function phase() {
         kubeadm init phase "$@" --config $kubeadm_config2 2>&1 | tee -a $ADMIN_LOG
@@ -272,6 +291,9 @@ function cluster-init() {
     phase kubeconfig all
     phase kubelet-start
     phase control-plane all
+
+    patch-apiserver-manifest
+
     phase etcd local
     phase upload-config all
     phase upload-certs
