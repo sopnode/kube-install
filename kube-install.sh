@@ -282,6 +282,11 @@ function cluster-init() {
            /etc/kubernetes/manifests/kube-apiserver.yaml
     }
 
+    function inject-konnectivity-manifest() {
+        cp $MYDIR/yaml/manifests/konnectivity-server.yaml \
+           /etc/kubernetes/manifests/
+    }
+
     # ----------
     # do stuff phase by phase so we can inject konnectivity as a static pod
     function phase() {
@@ -293,6 +298,7 @@ function cluster-init() {
     phase control-plane all
 
     patch-apiserver-manifest
+    inject-konnectivity-manifest
 
     phase etcd local
     phase upload-config all
