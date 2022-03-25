@@ -408,9 +408,9 @@ doc-kube hello-world "deploy the hello-world app"
 # nodes
 function join-cluster() {
     local master="$1"
-    local fetch="ssh $master kube-install/kube-install.sh show-join"
+    local fetch="ssh $master kube-install/kube-install.sh join-command"
     local command=$($fetch)
-    # somehow the backslash stands in the way
+    # the backslash stands in the way
     command=$(sed -e 's/\\//' <<< $command)
     if [ -n "$command" ]; then
         echo "Running $command"
@@ -425,18 +425,38 @@ $fetch"
 doc-kube join-cluster "worker node: join the cluster (master hostname as 1st arg)"
 
 
-# on the master, for the nodes
-function show-join() {
-    # xxx could be a little more paranoid
-    # and check the token is still valid
-    if [ -f $ADMIN_LOG ]; then
-        tail -2 $ADMIN_LOG
+# this snap-installed thing is not found when entering through ssh
+# unbelievable...
+function find-yq() {
+    if [ ! -z "$(type -t yq)" ]; then
+        return
+    elif [ -f /var/lib/snapd/snap/bin/yq ]; then
+        PATH=$PATH:/var/lib/snapd/snap/bin
     else
-        1>&2 echo "this command is intended to be run on the master node"
+        echo "could not find command yq - exiting"
         exit 1
     fi
 }
-doc-kube show-join "master node: display the command for the workers to join"
+
+# on the master, for the nodes
+function join-command() {
+    if [ ! -f $ADMIN_LOG ]; then
+        1>&2 echo "this command is intended to be run on the master node"
+        exit 1
+    fi
+    # e.g.
+    # kubeadm join sopnode-w2.inria.fr:6443 \
+    # --token hdsdoq.fghmmi8kdstjbfz4 \
+    # --discovery-token-ca-cert-hash sha256:<some-hash>
+    # in the past we used to look in $ADMIN_LOG
+    # but that's no longer possible as we use phases
+    # assuming the tokens are all valid forever, so take the first
+    # xxx a bit lazy to find the right ca-cert-hash...
+    find-yq
+    local token=$(kubeadm token list --experimental-output yaml | yq .token | head -1)
+    echo kubeadm join $(hostname):6443 --token $token --discovery-token-unsafe-skip-ca-verification
+}
+doc-kube join-command "master node: display the command for workers to join"
 
 
 function kube-teardown() {
