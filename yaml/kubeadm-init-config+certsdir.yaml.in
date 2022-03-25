@@ -27,6 +27,7 @@ apiServer:
     max-mutating-requests-inflight: "500"
     default-watch-cache-size: "500"
     watch-cache-sizes: "persistentvolumeclaims#1000,persistentvolumes#1000"
+    egress-selector-config-file: /etc/kubernetes/egress-selector-konnectivity.yaml
 
 controllerManager:
   # https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/

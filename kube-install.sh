@@ -255,6 +255,8 @@ function cluster-init() {
 
     function generate_etc_configs() {
         # install our config files
+        rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes
+        # and these need to go through variable substitution w/ envsubst
         local tmpl
         for tmpl in $MYDIR/yaml/*.yaml.in; do
             local b=$(basename $tmpl .in)
