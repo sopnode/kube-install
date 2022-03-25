@@ -387,6 +387,12 @@ EOF
 doc-kube setup-kubeproxy "create and start a kubeproxy service on port 8001"
 
 
+function deploy-dashboard() {
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+}
+doc-kube deploy-dashboard "deploy the k8s web UI on master node"
+
+
 ## testing with hello-kubernetes (master only)
 function hello-world() {
     cd
