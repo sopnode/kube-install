@@ -301,13 +301,22 @@ function cluster-init() {
         # /etc/kubernetes/manifests/kube-apiserver.yaml
         # NOTE: this is not just a simple dictionary merge
         # because in the apiserver containers key there
-        # actually is a list... 
+        # actually is a list...
         # for now this has been done manually
         cp $MYDIR/yaml/manifests/kube-apiserver+uds.yaml \
            /etc/kubernetes/manifests/kube-apiserver.yaml
     }
 
     function inject-konnectivity-manifest() {
+        # xxx note that as per
+        # https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/
+        # the official way to do this would more be to use e.g.
+        # /etc/kubelet.d/
+        # to store the manifests of statid pods
+        # this however requires tweaking of the kubelet options
+        # likely in some kubelet service
+        # systemctl cat kubelet (which shows 2 instances btw)
+        # so let's keep it simple for now
         cp $MYDIR/yaml/manifests/konnectivity-server.yaml \
            /etc/kubernetes/manifests/
     }

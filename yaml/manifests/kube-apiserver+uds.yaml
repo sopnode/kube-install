@@ -1,3 +1,10 @@
+### WARNING
+# this is the result of a manual injection of
+# apiser-uds.yaml
+# into
+# /etc/kubernetes/manifests/kube-apiserver.yaml
+# as shipping with kubeadm (1.22)
+### WARNING
 apiVersion: v1
 kind: Pod
 metadata:
