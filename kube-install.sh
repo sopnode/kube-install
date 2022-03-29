@@ -426,8 +426,9 @@ doc-kube hello-world "deploy the hello-world app"
 
 # nodes
 function join-cluster() {
+    # use a user@hostname if needed
     local master="$1"
-    local fetch="ssh $master kube-install.sh join-command"
+    local fetch="ssh -o StrictHostKeyChecking=accept-new $master kube-install.sh join-command"
     local command=$($fetch)
     # the backslash stands in the way
     command=$(sed -e 's/\\//' <<< $command)
