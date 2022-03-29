@@ -1,6 +1,10 @@
 ########## pseudo docstrings
 MYDIR=$(dirname $(readlink -f $BASH_SOURCE))
 
+# the way this is installed on the sopnodes is
+# (*) repo is cloned in /usr/share/kube-install
+# (*) with a symlink in /usr/local/bin/kube-install.sh
+
 # for the mac where readlink has no -f option
 [ -z "$MYDIR" ] && MYDIR=$(dirname $BASH_SOURCE)
 [ -z "$_sourced_r2labutils" ] && source ${MYDIR}/r2labutils.sh
@@ -423,7 +427,7 @@ doc-kube hello-world "deploy the hello-world app"
 # nodes
 function join-cluster() {
     local master="$1"
-    local fetch="ssh $master kube-install/kube-install.sh join-command"
+    local fetch="ssh $master kube-install.sh join-command"
     local command=$($fetch)
     # the backslash stands in the way
     command=$(sed -e 's/\\//' <<< $command)
