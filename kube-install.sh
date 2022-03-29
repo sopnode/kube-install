@@ -495,6 +495,10 @@ kubectl delete nodes $(hostname)
 doc-kube kube-teardown "undo create-cluster or kubeadm join - use with care..."
 
 
+function version() {
+    git -C $MYDIR log HEAD --format=format:%h -1
+}
+
 
 for subcommand in "$@"; do
     case "$subcommand" in
