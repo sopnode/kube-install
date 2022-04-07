@@ -193,7 +193,6 @@ doc-kube fetch-kube-images "retrieve kube core images from dockerhub or similar"
 ##################################################### run-time
 
 # master only
-# the *`kubeadm init ..`* command issues a *`kubeadm join`* command that must be copied/pasted ...
 ADMIN_LOG=$MYDIR/kubeadm-init.log
 
 function create-cluster() {
@@ -233,7 +232,7 @@ function create-konnectivity-kubeconfig-and-certs() {
 function cluster-init() {
 
     # tmp xxx reinstate when not in devel mode
-    #fetch-kube-images
+    fetch-kube-images
 
     swapoff -a
 
@@ -337,9 +336,11 @@ function cluster-init() {
     phase kubelet-start
     phase control-plane all
 
+    ### our additions
     patch-apiserver-manifest
     inject-konnectivity-manifest
     create-konnectivity-kubeconfig-and-certs
+    ### end
 
     phase etcd local
     phase upload-config all
@@ -432,8 +433,6 @@ function join-cluster() {
     local master="$1"
     local fetch="ssh -o StrictHostKeyChecking=accept-new $master kube-install.sh join-command"
     local command=$($fetch)
-    # the backslash stands in the way
-    command=$(sed -e 's/\\//' <<< $command)
     if [ -n "$command" ]; then
         echo "Running $command"
         $command
@@ -481,21 +480,23 @@ function join-command() {
 doc-kube join-command "master node: display the command for workers to join"
 
 
-function kube-teardown() {
+function destroy-cluster() {
     cd $MYDIR
     source configs/$(hostname --short)-config.sh
     local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
 
     echo "You're going to have to answer 'yes' here"
-    kubeadm reset
+    echo y | kubeadm reset
     rm -rf ${output_dir}
     rm -rf /etc/kubernetes/*
+    rm -rf /etc/cni/net.d
+
     echo "you might want to also run on your master something like
 kubectl drain --ignore-daemonsets $(hostname)
 kubectl delete nodes $(hostname)
 "
 }
-doc-kube kube-teardown "undo create-cluster or kubeadm join - use with care..."
+doc-kube destroy-cluster "undo create-cluster or kubeadm join - use with care..."
 
 
 function version() {
