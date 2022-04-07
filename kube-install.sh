@@ -150,7 +150,7 @@ EOF
 
     case $VERSION_ID in
         #   kube rpms        cri-o
-        35) KVERSION=1.22.8; CVERSION=1.22;;
+        35) KVERSION=1.22.4; CVERSION=1.22;;
         *) echo WARNING: you should define VERSIONS for fedora $VERSION_ID; exit 1;;
     esac
 
