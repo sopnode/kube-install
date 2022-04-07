@@ -331,7 +331,7 @@ function cluster-init() {
     function phase() {
         kubeadm init phase "$@" --config $kubeadm_config2 2>&1 | tee -a $ADMIN_LOG
     }
-    phase preflight
+    phase preflight || { echo 'preflight failed - exiting'; exit 1; }
     phase kubeconfig all
     phase kubelet-start
     phase control-plane all
