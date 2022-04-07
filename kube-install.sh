@@ -442,6 +442,14 @@ was not able to find the join command using
 $fetch"
         exit 1
     fi
+    # take care of the kubectl config file
+    local remoteconfig=$master:.kube/config
+    local localconfig=~/.kube/config
+    if [ -f ~localconfig ]; then
+        localconfig=${localconfig}-$master
+    fi
+    echo "Fetching $remoteconfig as $localconfig"
+    rsync -ai $remoteconfig $localconfig
 }
 doc-kube join-cluster "worker node: join the cluster (master hostname as 1st arg)"
 
