@@ -231,10 +231,11 @@ function create-konnectivity-kubeconfig-and-certs() {
 
 function cluster-init() {
 
-    # tmp xxx reinstate when not in devel mode
+    swapoff -a
+
     fetch-kube-images
 
-    swapoff -a
+    systemctl enable --now kubelet
 
     # spot the config file for that host
     local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
@@ -498,6 +499,8 @@ function destroy-cluster() {
     rm -rf ${output_dir}
     rm -rf /etc/kubernetes/*
     rm -rf /etc/cni/net.d
+    systemctl stop kubelet
+    systemctl disable kubelet
 
     echo "you might want to also run on your master something like
 kubectl drain --ignore-daemonsets $(hostname)
