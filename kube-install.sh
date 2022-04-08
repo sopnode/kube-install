@@ -208,6 +208,7 @@ doc-kube create-cluster "start a kube cluster with the current node as a master"
 
 # https://kubernetes.io/docs/tasks/extend-kubernetes/setup-konnectivity/
 function create-konnectivity-kubeconfig-and-certs() {
+    local server="https://${K8S_API_ENDPOINT_INTERNAL}:6443"
     pushd /etc/kubernetes/pki
     openssl req -subj "/CN=system:konnectivity-server" \
         -new -newkey rsa:2048 -nodes \
@@ -215,11 +216,10 @@ function create-konnectivity-kubeconfig-and-certs() {
     openssl x509 -req -in konnectivity.csr \
         -days 750 -sha256 \
         -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out konnectivity.crt
-    SERVER=$(kubectl config view -o jsonpath='{.clusters..server}')
     kubectl --kubeconfig /etc/kubernetes/konnectivity-server.conf config \
         set-credentials system:konnectivity-server --client-certificate konnectivity.crt --client-key konnectivity.key --embed-certs=true
     kubectl --kubeconfig /etc/kubernetes/konnectivity-server.conf config \
-        set-cluster kubernetes --server "$SERVER" --certificate-authority /etc/kubernetes/pki/ca.crt --embed-certs=true
+        set-cluster kubernetes --server "$server" --certificate-authority /etc/kubernetes/pki/ca.crt --embed-certs=true
     kubectl --kubeconfig /etc/kubernetes/konnectivity-server.conf config \
         set-context system:konnectivity-server@kubernetes --cluster kubernetes --user system:konnectivity-server
     kubectl --kubeconfig /etc/kubernetes/konnectivity-server.conf config \
