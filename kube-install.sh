@@ -260,8 +260,9 @@ function cluster-init() {
     local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
 
     function generate_etc_configs() {
+        mkdir -p /etc/kubernetes
         # install our config files
-        rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes
+        rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes/
         # and these need to go through variable substitution w/ envsubst
         local tmpl
         for tmpl in $MYDIR/yaml/*.yaml.in; do
@@ -298,6 +299,7 @@ function cluster-init() {
     set +a
 
     # copy certificates in /etc
+    mkdir -p /etc/kubernetes/pki
     rsync -a ${LOCAL_CERTS_DIR}/ /etc/kubernetes/pki/
 
     function patch-apiserver-manifest() {
