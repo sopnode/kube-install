@@ -259,7 +259,7 @@ function cluster-init() {
     local kubeadm_config1=/etc/kubernetes/kubeadm-init-config+certsdir.yaml
     local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
 
-    function generate_etc_configs() {
+    function generate-etc-configs() {
         mkdir -p /etc/kubernetes
         # install our config files
         rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes/
@@ -276,7 +276,7 @@ function cluster-init() {
     }
 
     # generate a first time to be able to invoke certificate generation
-    generate_etc_configs
+    generate-etc-configs
 
     # generate certificates (overwrite ADMIN_LOG)
     kubeadm init phase certs all --config $kubeadm_config1 2>&1 | tee $ADMIN_LOG
