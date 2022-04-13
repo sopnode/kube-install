@@ -237,6 +237,9 @@ function cluster-init() {
 
     systemctl enable --now kubelet
 
+    # the sooner the better
+    mkdir -p /etc/kubernetes/pki
+
     # spot the config file for that host
     local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
 
@@ -260,7 +263,6 @@ function cluster-init() {
     local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
 
     function generate-etc-configs() {
-        mkdir -p /etc/kubernetes
         # install our config files
         rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes/
         # and these need to go through variable substitution w/ envsubst
@@ -299,7 +301,6 @@ function cluster-init() {
     set +a
 
     # copy certificates in /etc
-    mkdir -p /etc/kubernetes/pki
     rsync -a ${LOCAL_CERTS_DIR}/ /etc/kubernetes/pki/
 
     function patch-apiserver-manifest() {
