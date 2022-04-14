@@ -242,6 +242,10 @@ function cluster-init() {
 
     # spot the config file for that host
     local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
+    [ -f $localconfig ] || {
+        echo "local config $localconfig not foud - bye"
+        exit 1
+    }
 
     if [ ! "$localconfig" ]; then
         echo "local config file $localconfig not found - aborting"
