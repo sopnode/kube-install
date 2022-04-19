@@ -388,7 +388,25 @@ function cluster-init() {
 
 
 function cluster-networking() {
+
+    # https://github.com/cri-o/cri-o/issues/4276
+    function restart-crio-upon-cni-creation() {
+        while true; do
+            local files=$(ls -l /etc/cni/net.d/* 2> /dev/null)
+            if [ -z "$files" ]; then
+                echo "EMPTY /etc/cni/net.d - sleeping 4"
+                sleep 4
+                continue
+            fi
+            echo "FOUND $files - sleeping 3 before restarting crio"
+            sleep 3
+            systemctl restart crio
+            break
+        done
+    }
+
     cluster-networking-flannel
+    restart-crio-upon-cni-creation
 }
 
 
