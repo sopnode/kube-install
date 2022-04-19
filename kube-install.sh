@@ -299,6 +299,9 @@ function cluster-init() {
 
     # generate certificates (overwrite ADMIN_LOG)
     kubeadm init phase certs all --config $kubeadm_config1 2>&1 | tee $ADMIN_LOG
+    # no longer needed; in fact it would be cool to be allowed to specify
+    # --cert-dir on the command line instead of having to create a separate config file
+    rm $kubeadm_config1
 
     # compute cert hash
     export CA_CERT_HASH=$( \

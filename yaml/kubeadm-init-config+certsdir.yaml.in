@@ -13,6 +13,9 @@ kind: ClusterConfiguration
 kubernetesVersion: v${K8S_VERSION}
 clusterName: ${K8S_CLUSTER_NAME}
 controlPlaneEndpoint: ${K8S_API_ENDPOINT_INTERNAL}:6443
+# this line is for when we call kubeadm certs phase only
+# it gets removed eventually when kube-install.sh 
+# installs it in /etc/kubernetes
 certificatesDir: ${LOCAL_CERTS_DIR}
 networking:
   podSubnet: 10.244.0.0/16
