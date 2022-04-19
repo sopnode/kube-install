@@ -339,6 +339,10 @@ function cluster-init() {
            /etc/kubernetes/manifests/
     }
 
+    function start-konnectivity-agent() {
+        kubectl apply -f /etc/kubernetes/konnectivity-agent.yaml
+    }
+
     # ----------
     # do stuff phase by phase so we can inject konnectivity as a static pod
     function phase() {
@@ -367,6 +371,8 @@ function cluster-init() {
     [ -d ~/.kube ] || mkdir ~/.kube
     cp /etc/kubernetes/admin.conf ~/.kube/config
     chown root:root ~/.kube/config
+
+    start-konnectivity-agent
 }
 
 
