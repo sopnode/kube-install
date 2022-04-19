@@ -267,6 +267,11 @@ function cluster-init() {
     local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
 
     function generate-etc-configs() {
+        (( $BASH_VERSINFO >= 5 )) && shopt -s globstar || {
+            echo "Error: globstar unsupported in bash $BASH_VERSINFO - exiting"
+            exit 1
+        }
+
         # first populate our templates in-place
         for tmpl in $MYDIR/**/*.in; do
             local b=$(basename $tmpl .in)
@@ -286,8 +291,6 @@ function cluster-init() {
 
     # generate a first time to be able to invoke certificate generation
     generate-etc-configs
-
-    emergency-exit
 
     # plain/simple version goes like
     # (1) kubeadm init --pod-network-cidr=10.244.0.0/16
@@ -326,8 +329,7 @@ function cluster-init() {
         # because in the apiserver containers key there
         # actually is a list...
         # for now this has been done manually
-        cp $MYDIR/yaml/manifests/kube-apiserver+uds.yaml \
-           /etc/kubernetes/manifests/kube-apiserver.yaml
+        cp $MYDIR/yaml/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/
     }
 
     function inject-konnectivity-manifest() {
@@ -355,6 +357,7 @@ function cluster-init() {
     }
     phase preflight || { echo 'preflight failed - exiting'; exit 1; }
     phase kubeconfig all
+
     phase kubelet-start
     phase control-plane all
 
