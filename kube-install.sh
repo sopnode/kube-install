@@ -267,15 +267,18 @@ function cluster-init() {
     local kubeadm_config2=/etc/kubernetes/kubeadm-init-config.yaml
 
     function generate-etc-configs() {
+        # first populate our templates in-place
+        for tmpl in $MYDIR/**/*.in; do
+            local b=$(basename $tmpl .in)
+            local d=$(dirname $tmpl)
+            local o=$d/$b
+            echo "Templating $tmpl -> $o"
+            envsubst < $tmpl > $o
+        done
+
         # install our config files
         rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes/
-        # and these need to go through variable substitution w/ envsubst
-        local tmpl
-        for tmpl in $MYDIR/yaml/*.yaml.in; do
-            local b=$(basename $tmpl .in)
-            # echo "refreshing /etc/kubernetes/$b"
-            envsubst < $tmpl > /etc/kubernetes/$b
-        done
+        rsync -ai $MYDIR/yaml/manifests/*.yaml /etc/kubernetes/manifests/
         # generate the version without certificatesDir
         # define for future use
         sed '/certificatesDir:/d' $kubeadm_config1 > $kubeadm_config2
@@ -283,6 +286,8 @@ function cluster-init() {
 
     # generate a first time to be able to invoke certificate generation
     generate-etc-configs
+
+    emergency-exit
 
     # plain/simple version goes like
     # (1) kubeadm init --pod-network-cidr=10.244.0.0/16
