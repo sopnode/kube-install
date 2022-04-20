@@ -14,14 +14,14 @@ cd $MYDIR
 create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
 
-function emergency-exit() {
-    echo EMERGENCY; exit 1
-}
+# function emergency-exit() {
+#     echo EMERGENCY; exit 1
+# }
 
-function breakpoint() {
-    echo -n "BREAKPOINT - type Enter when done ... "
-    read _
-}
+# function breakpoint() {
+#     echo -n "BREAKPOINT - type Enter when done ... "
+#     read _
+# }
 
 ##################################################### imaging
 
