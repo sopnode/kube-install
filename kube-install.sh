@@ -14,6 +14,9 @@ cd $MYDIR
 create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
 
+####
+readonly USER=r2lab
+
 # function emergency-exit() {
 #     echo EMERGENCY; exit 1
 # }
@@ -121,7 +124,7 @@ function install-k8s() {
     [ -f /etc/lsb-release ]    && ubuntu-install-k8s
     fetch-kube-images
 }
-doc-install install "install kubernets core"
+doc-install install "install kubernetes core + images"
 
 
 function fedora-install-k8s() {
@@ -199,11 +202,20 @@ function create-cluster() {
     cluster-init
     cluster-networking
 
-    echo "========== to join this cluster (see $ADMIN_LOG)"
-    tail -2 $ADMIN_LOG
-    echo "=========="
+    copy-kubeconfig-in-user
 }
 doc-kube create-cluster "start a kube cluster with the current node as a master"
+
+
+function copy-kubeconfig-in-user() {
+    getent passwd $USER >& /dev/null || { echo no such user $USER; return 1; }
+    local user_home=$(bash -c "cd ~$(printf %q $USER) && pwd")
+    [[ -d $user_home ]] || { echo user $USER has inexistent homedir $user_home; return 1; }
+    local group=$(id -g $USER)
+    mkdir -p $user_home/.kube
+    cp /root/.kube/config $user_home/.kube
+    chown -R $USER:$group $user_hokme/.kube
+}
 
 
 # https://kubernetes.io/docs/tasks/extend-kubernetes/setup-konnectivity/
@@ -478,6 +490,9 @@ doc-kube hello-world "deploy the hello-world app"
 # nodes
 function join-cluster() {
 
+    echo enabling kubelet
+    systemctl enable --now kubelet
+
     # use a user@hostname if needed
     local master="$1"
     local fetch="ssh -o StrictHostKeyChecking=accept-new $master kube-install.sh join-command"
@@ -500,9 +515,6 @@ $fetch"
     fi
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
-
-    echo enabling kubelet
-    systemctl enable --now kubelet
 
     -restart-crio-upon-cni-creation
 
