@@ -387,26 +387,26 @@ function cluster-init() {
 }
 
 
+# https://github.com/cri-o/cri-o/issues/4276
+function -restart-crio-upon-cni-creation() {
+    while true; do
+        local files=$(ls -l /etc/cni/net.d/* 2> /dev/null)
+        if [ -z "$files" ]; then
+            echo "EMPTY /etc/cni/net.d - sleeping 4"
+            sleep 4
+            continue
+        fi
+        echo "FOUND $files - sleeping 1 before restarting crio"
+        sleep 1
+        systemctl restart crio
+        break
+    done
+}
+
 function cluster-networking() {
 
-    # https://github.com/cri-o/cri-o/issues/4276
-    function restart-crio-upon-cni-creation() {
-        while true; do
-            local files=$(ls -l /etc/cni/net.d/* 2> /dev/null)
-            if [ -z "$files" ]; then
-                echo "EMPTY /etc/cni/net.d - sleeping 4"
-                sleep 4
-                continue
-            fi
-            echo "FOUND $files - sleeping 3 before restarting crio"
-            sleep 3
-            systemctl restart crio
-            break
-        done
-    }
-
     cluster-networking-flannel
-    restart-crio-upon-cni-creation
+    -restart-crio-upon-cni-creation
 }
 
 
@@ -477,6 +477,7 @@ doc-kube hello-world "deploy the hello-world app"
 
 # nodes
 function join-cluster() {
+
     # use a user@hostname if needed
     local master="$1"
     local fetch="ssh -o StrictHostKeyChecking=accept-new $master kube-install.sh join-command"
@@ -499,6 +500,12 @@ $fetch"
     fi
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
+
+    echo enabling kubelet
+    systemctl enable --now kubelet
+
+    -restart-crio-upon-cni-creation
+
 }
 doc-kube join-cluster "worker node: join the cluster
 example: $0 join-cluster r2lab@sopnode-l1.inria.fr"
