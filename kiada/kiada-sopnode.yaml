@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: kiada-sn-pod
+  name: kiada-sopnode-pod
   # labels:
   #   env: test
 spec:
   containers:
-  - name: kiada-sn-cont
+  - name: kiada-sopnode-cont
     image: luksa/kiada:0.1
     imagePullPolicy: IfNotPresent
   affinity:
