@@ -491,6 +491,7 @@ $fetch"
         exit 1
     fi
     # take care of the kubectl config file
+    [ -d ~/.kube ] || mkdir ~/.kube
     local remoteconfig=$master:.kube/config
     local localconfig=~/.kube/config
     if [ -f ~localconfig ]; then
@@ -499,7 +500,8 @@ $fetch"
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
 }
-doc-kube join-cluster "worker node: join the cluster (master hostname as 1st arg)"
+doc-kube join-cluster "worker node: join the cluster
+example: $0 join-cluster r2lab@sopnode-l1.inria.fr"
 
 
 # this snap-installed thing is not found when entering through ssh
