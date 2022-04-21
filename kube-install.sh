@@ -558,7 +558,7 @@ function join-command() {
 doc-kube join-command "master node: display the command for workers to join"
 
 
-function destroy-cluster() {
+function -undo-cluster() {
     cd $MYDIR
     source configs/$(hostname --short)-config.sh
     local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
@@ -576,7 +576,16 @@ kubectl drain --ignore-daemonsets $(hostname)
 kubectl delete nodes $(hostname)
 "
 }
-doc-kube destroy-cluster "undo create-cluster or kubeadm join - use with care..."
+
+function destroy-cluster() {
+    -undo-cluster "$@"
+}
+doc-kube destroy-cluster "undo create-cluster"
+
+function leave-cluster() {
+    -undo-cluster "$@"
+}
+doc-kube leave-cluster "undo join-cluster"
 
 
 function version() {
