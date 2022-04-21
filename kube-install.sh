@@ -589,7 +589,7 @@ doc-kube leave-cluster "undo join-cluster"
 
 
 function version() {
-    git -C $MYDIR log HEAD --format=format:%h -1
+    echo $(git -C $MYDIR log HEAD --format=format:%h -1)
 }
 
 
