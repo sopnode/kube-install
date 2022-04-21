@@ -362,6 +362,7 @@ function cluster-init() {
     }
 
     function start-konnectivity-agent() {
+        kubectl apply -f /etc/kubernetes/konnectivity-rbac.yaml
         kubectl apply -f /etc/kubernetes/konnectivity-agent.yaml
     }
 
