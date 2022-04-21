@@ -214,7 +214,7 @@ function copy-kubeconfig-in-user() {
     local group=$(id -g $USER)
     mkdir -p $user_home/.kube
     cp /root/.kube/config $user_home/.kube
-    chown -R $USER:$group $user_hokme/.kube
+    chown -R $USER:$group $user_home/.kube
 }
 
 
