@@ -497,6 +497,12 @@ function join-cluster() {
     echo enabling kubelet
     systemctl enable --now kubelet
 
+    # the crio rpm installs stuff in there !
+    [ -d /etc/cni/net.d ] && {
+        echo cleaning up CNI
+        rm -f /etc/cni/net.d/*
+    }
+
     # use a user@hostname if needed
     local master="$1"
     local fetch="ssh -o StrictHostKeyChecking=accept-new $master kube-install.sh join-command"
