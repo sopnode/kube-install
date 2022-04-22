@@ -284,6 +284,9 @@ function cluster-init() {
             exit 1
         }
 
+        # cleanup any leftover
+        git -C $MYDIR clean -f yaml/
+
         # first populate our templates in-place
         for tmpl in $MYDIR/**/*.in; do
             local b=$(basename $tmpl .in)
