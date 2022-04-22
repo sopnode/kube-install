@@ -342,15 +342,16 @@ function cluster-init() {
     rsync -a ${LOCAL_CERTS_DIR}/ /etc/kubernetes/pki/
 
     function patch-apiserver-manifest() {
-        # xxx would be nice to automatically inject the contents of
-        # yaml/manifests/apiserver-uds.yaml
-        # into what kubeadm init has created in
-        # /etc/kubernetes/manifests/kube-apiserver.yaml
-        # NOTE: this is not just a simple dictionary merge
-        # because in the apiserver containers key there
-        # actually is a list...
-        # for now this has been done manually
-        cp $MYDIR/yaml/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/
+        # unfortunately yq script won't seem to accept comments
+        # whole point here is to use the contents of
+        # add-uds-to-apiserver.yaml (taken verbatim from k8s website)
+        # and inject it into the manifest as created by kubeadm
+        local topatch=/etc/kubernetes/manifests/kube-apiserver.yaml
+        # --inplace appears to change the last input
+        # https://github.com/mikefarah/yq/issues/1193
+        yq eval-all --inplace \
+            --from-file $MYDIR/yaml/manifests/add-uds-to-apiserver.yq \
+            $MYDIR/yaml/manifests/add-uds-to-apiserver.yaml $topatch
     }
 
     function inject-konnectivity-manifest() {
