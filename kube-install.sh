@@ -9,10 +9,12 @@ MYDIR=$(dirname $(readlink -f $BASH_SOURCE))
 [ -z "$MYDIR" ] && MYDIR=$(dirname $BASH_SOURCE)
 [ -z "$_sourced_r2labutils" ] && source ${MYDIR}/r2labutils.sh
 
+readonly MYDIR
 cd $MYDIR
 
 create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
+create-doc-category inspect "commands to check the installation"
 
 ####
 readonly USER=r2lab
@@ -597,6 +599,32 @@ function leave-cluster() {
 doc-kube leave-cluster "undo join-cluster"
 
 
+
+doc-inspect show-rpms "list relevant rpms"
+function show-rpms() {
+    rpm -qa | egrep 'kube|cri-o|cri-tools'
+    dnf module list cri-o
+}
+doc-inspect clear-rpms "uninstall relevant rpms"
+function clear-rpms() {
+    rpm -qa | egrep 'kube|cri-o|cri-tools' | xargs rpm -e
+}
+doc-inspect show-images "list local images"
+function show-images() {
+    crictl images
+}
+doc-inspect clear-images "trash unused local images"
+function clear-images() {
+    crictl rmi --prune
+}
+doc-inspect show-all "show-rpms + show-images"
+function show-all() {
+    show-rpms
+    show-images
+}
+
+
+doc-inspect version "display git hash for $0"
 function version() {
     echo $(git -C $MYDIR log HEAD --format=format:%h -1)
 }
@@ -604,7 +632,7 @@ function version() {
 
 for subcommand in "$@"; do
     case "$subcommand" in
-        help|--help) help-install; help-kube; exit 1;;
+        help|--help) help-install; help-kube; help-inspect; exit 1;;
     esac
 done
 "$@"
