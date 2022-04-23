@@ -7,6 +7,7 @@ for starters we play with the ability to select nodes for pods
 | yaml file | what for |
 |-|-|
 | `kiada-bare.yaml` | running on any node |
+| `kiada-l1.yaml` | choosing a specific sopnode |
 | `kiada-fit01.yaml` | choosing a specific R2lab node |
 | `kiada-r2lab.yaml` | choosing a (any) R2lab node|
 | `kiada-sopnode.yaml` | choosing an infra node (i.e. non R2lab) |
