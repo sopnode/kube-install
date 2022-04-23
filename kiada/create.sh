@@ -39,6 +39,8 @@ function main() {
 
     readonly template=kiada-l1.yaml
     readonly script=create.yq
+# adding all capabilities because these are for tests only
+# and typically a simple ping won't work out of the box
     cat > $script << EOF
 .metadata.name = "${image}-${shortname}-pod"
 |
@@ -47,6 +49,8 @@ function main() {
 .spec.containers[0].image = "${fullimage}"
 |
 .spec.nodeName = "${hostname}"
+|
+.spec.containers[0].securityContext.capabilities.add = [ "ALL" ]
 EOF
     local yamlfile="${image}-${shortname}.yaml"
     yq --from-file $script $template > $yamlfile
