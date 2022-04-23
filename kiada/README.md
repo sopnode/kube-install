@@ -22,3 +22,22 @@ the `fedora-with-ping` and `ubuntu-with-ping` folders contain recipes to reuild 
 buildah build -t fedora-with-ping fedora-with-ping
 buildah build -t ubuntu-with-ping ubuntu-with-ping
 ```
+
+# generating node-specific yaml
+
+a convenience script allows to produce a yaml file for a specific combination of node and image; examples
+
+```
+create.sh -n fit01
+-> run a kiada pod on fit01
+
+create.sh -i ubuntu
+-> run a ubuntu-with-ping container on the local hostname
+
+create.sh -s
+-> prepare a yaml file for the defaults (kiada + hostname) but stops short of running it
+
+create.sh -n l1                 -> run a kiada pod on sopnode-l1
+create.sh -n w3                 -> run a kiada pod on sopnode-w3
+create.sh -n fit01 -i fedora    -> run a fedora on fit01
+```
