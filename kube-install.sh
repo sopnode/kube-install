@@ -628,7 +628,7 @@ function show-all() {
 
 doc-inspect version "display git hash for $0"
 function version() {
-    echo $(git -C $MYDIR log HEAD --format=format:%h -1)
+    echo $(git "$@" rev-parse --abbrev-ref HEAD) / $(git -C $MYDIR log HEAD --format=format:%h -1)
 }
 
 
