@@ -252,7 +252,7 @@ function cluster-init() {
     systemctl enable --now kubelet
 
     # the sooner the better
-    mkdir -p /etc/kubernetes/pki
+    mkdir -p /etc/kubernetes/pki /etc/kubernetes/konnectivity-server
 
     # spot the config file for that host
     local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
@@ -301,6 +301,7 @@ function cluster-init() {
         # install our config files
         rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes/
         rsync -ai $MYDIR/yaml/manifests/*.yaml /etc/kubernetes/manifests/
+        rsync -ai $MYDIR/yaml/konnectivity-server/*.yaml /etc/kubernetes/konnectivity-server/
         # generate the version without certificatesDir
         # define for future use
         sed '/certificatesDir:/d' $kubeadm_config1 > $kubeadm_config2

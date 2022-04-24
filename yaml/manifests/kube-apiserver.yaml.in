@@ -51,7 +51,7 @@ spec:
     - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
     - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
     - --watch-cache-sizes=persistentvolumeclaims#1000,persistentvolumes#1000
-    - --egress-selector-config-file=/etc/kubernetes/egress-selector-konnectivity.yaml
+    - --egress-selector-config-file=/etc/kubernetes/konnectivity-server/egress-selector-konnectivity.yaml
     image: k8s.gcr.io/kube-apiserver:v1.22.4
     imagePullPolicy: IfNotPresent
     livenessProbe:
