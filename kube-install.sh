@@ -439,7 +439,11 @@ function cluster-networking-flannel() {
 }
 function cluster-networking-calico() {
     kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-    # unfinished - see web page mentioned above
+    # download for patching
+    local calico=yaml/calico-settings.yaml
+    curl -o $calico https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
+    yq --inplace '.spec.calicoNetwork.ipPools[0].cidr = "10.244.0.0/16"' $calico
+    kubectl create -f $calico
 }
 function cluster-networking-weave() {
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
