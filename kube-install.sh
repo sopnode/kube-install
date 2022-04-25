@@ -16,6 +16,8 @@ create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
 create-doc-category inspect "commands to check the installation"
 
+DEFAULT_NETWORKING=calico
+
 ####
 readonly USER=r2lab
 
@@ -313,7 +315,7 @@ function cluster-init() {
     # plain/simple version goes like
     # (1) kubeadm init --pod-network-cidr=10.244.0.0/16
     # (2) cp /etc/kubernetes/admin.conf ~/.kube/config
-    # (3) kube-install.sh cluster-networking-flannel
+    # (3) kube-install.sh cluster-networking
 
     # generate certificates (overwrite ADMIN_LOG)
     kubeadm init phase certs all --config $kubeadm_config1 2>&1 | tee $ADMIN_LOG
@@ -425,7 +427,9 @@ function -restart-crio-upon-cni-creation() {
 
 function cluster-networking() {
 
-    cluster-networking-flannel
+    local flavour=$DEFAULT_NETWORKING
+    [[ -n "$CNI_FLAVOUR" ]] && flavour=$CNI_FLAVOUR
+    cluster-networking-${flavour}
     -restart-crio-upon-cni-creation
 }
 
@@ -445,6 +449,7 @@ function cluster-networking-calico() {
     yq --inplace '.spec.calicoNetwork.ipPools[0].cidr = "10.244.0.0/16"' $calico
     kubectl create -f $calico
 }
+# untested yet
 function cluster-networking-weave() {
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 }
