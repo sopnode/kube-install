@@ -7,6 +7,5 @@ function normalize-image() {
         fedora) echo fedora:latest ;;
         fping)  echo localhost/fedora-with-ping ;;
         ubuntu)  echo localhost/ubuntu:latest ;;
-        uping)  echo localhost/ubuntu-with-ping ;;
     esac
 }

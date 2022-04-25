@@ -16,23 +16,26 @@ for starters we play with the ability to select nodes for pods
 
 # debug images
 
-the `fedora-with-ping` and `ubuntu-with-ping` folders contain recipes to reuild a little more complete base OS images
+the `fedora-with-ping` folder contain a recipe to rebuild a little more complete
+base OS image, with network-oriented tools for troubleshooting
+
+to build locally:
 
 ```
-buildah build -t fedora-with-ping fedora-with-ping
-buildah build -t ubuntu-with-ping ubuntu-with-ping
+./build.sh
 ```
 
 # generating node-specific yaml
 
-a convenience script allows to produce a yaml file for a specific combination of node and image; examples
+a convenience script allows to produce a yaml file for a specific combination of
+node and image; examples
 
 ```
 create.sh -n fit01
 -> run a kiada pod on fit01
 
-create.sh -i ubuntu
--> run a ubuntu-with-ping container on the local hostname
+create.sh -i fping
+-> run a fedora-with-ping container on the local hostname
 
 create.sh -s
 -> prepare a yaml file for the defaults (kiada + hostname) but stops short of running it

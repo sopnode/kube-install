@@ -1,5 +1,0 @@
-FROM ubuntu
-
-RUN apt-get update && apt-get install -y iputils-ping
-
-ENTRYPOINT ["tail", "-f", "/dev/null"]
