@@ -313,7 +313,7 @@ function cluster-init() {
     # plain/simple version goes like
     # (1) kubeadm init --pod-network-cidr=10.244.0.0/16
     # (2) cp /etc/kubernetes/admin.conf ~/.kube/config
-    # (3) kube-isntall.sh cluster-networking-flannel
+    # (3) kube-install.sh cluster-networking-flannel
 
     # generate certificates (overwrite ADMIN_LOG)
     kubeadm init phase certs all --config $kubeadm_config1 2>&1 | tee $ADMIN_LOG
