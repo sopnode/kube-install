@@ -9,7 +9,7 @@ spec:
   hostNetwork: true
   containers:
   - name: konnectivity-server-container
-    image: us.gcr.io/k8s-artifacts-prod/kas-network-proxy/proxy-server:v0.0.16
+    image: us.gcr.io/k8s-artifacts-prod/kas-network-proxy/proxy-server:v0.0.30
     command: ["/proxy-server"]
     args: [
             "--logtostderr=true",
