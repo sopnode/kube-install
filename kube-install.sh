@@ -631,6 +631,9 @@ function version() {
     echo $(git "$@" rev-parse --abbrev-ref HEAD) / $(git -C $MYDIR log HEAD --format=format:%h -1)
 }
 
+function pwd() {
+    echo $MYDIR
+}
 
 for subcommand in "$@"; do
     case "$subcommand" in
