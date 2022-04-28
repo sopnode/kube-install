@@ -31,16 +31,16 @@ a convenience script allows to produce a yaml file for a specific combination of
 node and image; examples
 
 ```
-create.sh -n fit01
+testpod.sh -n fit01
 -> run a kiada pod on fit01
 
-create.sh -i fping
+testpod.sh -i fping
 -> run a fedora-with-ping container on the local hostname
 
-create.sh -s
+testpod.sh -s
 -> prepare a yaml file for the defaults (kiada + hostname) but stops short of running it
 
-create.sh -n l1                 -> run a kiada pod on sopnode-l1
-create.sh -n w3                 -> run a kiada pod on sopnode-w3
-create.sh -n fit01 -i fedora    -> run a fedora on fit01
+testpod.sh -n l1                 -> run a kiada pod on sopnode-l1
+testpod.sh -n w3                 -> run a kiada pod on sopnode-w3
+testpod.sh -n fit01 -i fedora    -> run a fedora on fit01
 ```

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source create-nodes.sh
-source create-images.sh
+source testpod-nodes.sh
+source testpod-images.sh
 
 DEFAULT_IMAGE=kiada
 DEFAULT_NODE=$(hostname)
@@ -52,7 +52,7 @@ function main() {
     if [[ -f $yamlfile && -z "$force" ]]; then
         echo "$yamlfile already there - reusing"
     else
-        readonly script=create.yq
+        readonly script=testpod.yq
         # adding all capabilities because these are for tests only
         # and typically a simple ping won't work out of the box
         cat > $script << EOF
