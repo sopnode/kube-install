@@ -147,28 +147,19 @@ EOF
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
-    # find proper versions (make kube* and cri-o* as close as possible)
+    # K8S_VERSION and CRIO_VERSION defined in the configs/ file
+    # for determining the available options:
+    # K8S_VERSION: use dnf --showduplicates list kubelet --disableexcludes=kubernetes
+    # CRIO_VERSION: use dnf module list cri-o
 
-    # defines VERSION_ID
-    source /etc/os-release
+    echo using kube version $K8S_VERSION and cri-o version $CRIO_VERSION
 
-    # KVERSION: use dnf --showduplicates list kubelet --disableexcludes=kubernetes
-    # CVERSION: use dnf module list cri-o
-
-    case $VERSION_ID in
-        #   kube rpms        cri-o
-        35) KVERSION=1.23.6; CVERSION=1.22;;
-        *) echo WARNING: you should define VERSIONS for fedora $VERSION_ID; exit 1;;
-    esac
-
-    echo using kube version $KVERSION and cri-o version $CVERSION
-
-    dnf -y --disableexcludes=kubernetes install kubelet-$KVERSION kubeadm-$KVERSION kubectl-$KVERSION
+    dnf -y --disableexcludes=kubernetes install kubelet-$K8S_VERSION kubeadm-$K8S_VERSION kubectl-$K8S_VERSION
 
     # too early !
     # systemctl enable --now kubelet
 
-    dnf -y --disableexcludes=kubernetes module enable cri-o:$CVERSION
+    dnf -y --disableexcludes=kubernetes module enable cri-o:$CRIO_VERSION
     dnf -y --disableexcludes=kubernetes install cri-o
 
     systemctl daemon-reload
