@@ -337,14 +337,15 @@ function cluster-init() {
     function patch-apiserver-manifest() {
         # unfortunately yq script won't seem to accept comments
         # whole point here is to use the contents of
-        # add-uds-to-apiserver.yaml (taken verbatim from k8s website)
+        # add-uds-to-apiserver.yaml
+        # (taken verbatim from k8s website's konnectivity howto)
         # and inject it into the manifest as created by kubeadm
         local topatch=/etc/kubernetes/manifests/kube-apiserver.yaml
-        # --inplace appears to change the last input
+        # as of 4.25.1, yq now correctly updates the first file
         # https://github.com/mikefarah/yq/issues/1193
         yq eval-all --inplace \
             --from-file $MYDIR/yaml/manifests/add-uds-to-apiserver.yq \
-            $MYDIR/yaml/manifests/add-uds-to-apiserver.yaml $topatch
+            $topatch $MYDIR/yaml/manifests/add-uds-to-apiserver.yaml
     }
 
     function inject-konnectivity-manifest() {

@@ -1,4 +1,4 @@
-select(fileIndex==1).spec.containers[0].command += [ "--egress-selector-config-file=/etc/kubernetes/konnectivity-server/egress-selector-konnectivity.yaml" ]
-| select(fileIndex==1).spec.containers[].volumeMounts += select(fileIndex==0).spec.containers.volumeMounts
-| select(fileIndex==1).spec.volumes += select(fileIndex==0).spec.volumes
-| select(fileIndex==1)
+select(fileIndex==0).spec.containers[0].command += [ "--egress-selector-config-file=/etc/kubernetes/konnectivity-server/egress-selector-konnectivity.yaml" ]
+| select(fileIndex==0).spec.containers[].volumeMounts += select(fileIndex==1).spec.containers.volumeMounts
+| select(fileIndex==0).spec.volumes += select(fileIndex==1).spec.volumes
+| select(fileIndex==0)
