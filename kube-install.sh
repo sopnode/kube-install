@@ -21,6 +21,20 @@ DEFAULT_NETWORKING=calico
 ####
 readonly USER=r2lab
 
+###
+function load-config() {
+    # spot the config file for that host
+    local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
+    [ -f $localconfig ] || {
+        echo "local config $localconfig not found - bye"
+        exit 1
+    }
+
+    # set -a / set +a is for exporting the variables
+    set -a; source $localconfig; set +a
+
+}
+
 # function emergency-exit() {
 #     echo EMERGENCY; exit 1
 # }
@@ -96,6 +110,7 @@ doc-install update-os "dnf or apt update"
 
 
 function install() {
+    load-config
     install-k8s
     install-extras
     install-helm
@@ -151,6 +166,11 @@ EOF
     # for determining the available options:
     # K8S_VERSION: use dnf --showduplicates list kubelet --disableexcludes=kubernetes
     # CRIO_VERSION: use dnf module list cri-o
+
+    [[ -z "$K8S_VERSION" || -z "$K8S_VERSION" ]] && {
+        echo need to define K8S_VERSION and K8S_VERSION
+        exit 1
+    }
 
     echo using kube version $K8S_VERSION and cri-o version $CRIO_VERSION
 
@@ -235,8 +255,9 @@ function create-konnectivity-kubeconfig-and-certs() {
     popd
 }
 
-
 function cluster-init() {
+
+    load-config
 
     swapoff -a
 
@@ -246,21 +267,6 @@ function cluster-init() {
 
     # the sooner the better
     mkdir -p /etc/kubernetes/pki /etc/kubernetes/konnectivity-server
-
-    # spot the config file for that host
-    local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
-    [ -f $localconfig ] || {
-        echo "local config $localconfig not foud - bye"
-        exit 1
-    }
-
-    if [ ! "$localconfig" ]; then
-        echo "local config file $localconfig not found - aborting"
-        exit 1
-    fi
-
-    # set -a / set +a is for exporting the variables
-    set -a; source $localconfig; set +a
 
     local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
     mkdir -p ${output_dir}
