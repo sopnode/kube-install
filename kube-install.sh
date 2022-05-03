@@ -56,11 +56,6 @@ function load-config() {
 
 # still needed afterwards is tweaking your firewall
 
-### ubuntu - no longer supported
-
-# our version: 21.04
-# https://www.techrepublic.com/article/how-to-install-kubernetes-on-ubuntu-server-without-docker/
-
 ### miscell
 
 # setting up konnectivity
@@ -77,13 +72,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # all nodes
 function prepare() {
-    # NOTE 1: ubuntu
-    # this has not been extensively tested on ubuntu
-    # in addition, on ubuntu still, it seems there is a need to do also
-    # ufw disable
-    # # xxx probably needs to be mode more permanent
-    # NOTE 2: trying to mask services marked as swap looked promising
-    # but not quite right
+
     touch /etc/systemd/zram-generator.conf
     swapoff -a
 
@@ -139,8 +128,11 @@ doc-install install-helm "install helm"
 
 # all nodes
 function install-k8s() {
-    [ -f /etc/fedora-release ] && fedora-install-k8s
-    [ -f /etc/lsb-release ]    && ubuntu-install-k8s
+    [ -f /etc/fedora-release ] || {
+        $BASH_SOURCE is for fedora only
+        exit 1
+    }
+    fedora-install-k8s
     fetch-kube-images
 }
 doc-install install "install kubernetes core + images"
@@ -186,17 +178,6 @@ EOF
     systemctl enable --now crio
 }
 
-
-function ubuntu-install-k8s() {
-    apt update && apt -y upgrade
-    apt -y install containerd
-    mkdir -p /etc/containerd/ ; containerd config default > /etc/containerd/config.toml
-
-    apt -y install apt-transport-https
-    curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
-    apt update && apt -y install kubelet kubeadm kubectl
-}
 
 ##################################################### in-between
 # should be done in the image, but early images do not have it
