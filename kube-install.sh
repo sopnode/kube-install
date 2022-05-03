@@ -23,16 +23,23 @@ readonly USER=r2lab
 
 ###
 function load-config() {
-    # spot the config file for that host
-    local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
-    [ -f $localconfig ] || {
-        echo "local config $localconfig not found - bye"
-        exit 1
-    }
+    local strict="$1"; shift
 
-    # set -a / set +a is for exporting the variables
-    set -a; source $localconfig; set +a
+    # default for all
+    export K8S_VERSION=1.23.6
+    export CRIO_VERSION=1.22
 
+    if [[ -n "$strict" ]]; then
+        # spot the config file for that host
+        local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
+        [ -f $localconfig ] || {
+            echo "local config $localconfig not found - bye"
+            exit 1
+        }
+
+        # set -a / set +a is for exporting the variables
+        set -a; source $localconfig; set +a
+    fi
 }
 
 # function emergency-exit() {
@@ -99,13 +106,11 @@ doc-install update-os "dnf or apt update"
 
 
 function install() {
-    load-config
     install-k8s
     install-extras
     install-helm
 }
 doc-install install "meta-target to install k8s, extras and helm"
-
 
 # all nodes
 function install-extras() {
@@ -132,11 +137,11 @@ function install-k8s() {
         $BASH_SOURCE is for fedora only
         exit 1
     }
+    load-config
     fedora-install-k8s
     fetch-kube-images
 }
 doc-install install "install kubernetes core + images"
-
 
 function fedora-install-k8s() {
     cat <<EOF > /etc/yum.repos.d/kubernetes.repo
@@ -238,7 +243,7 @@ function create-konnectivity-kubeconfig-and-certs() {
 
 function cluster-init() {
 
-    load-config
+    load-config strict
 
     swapoff -a
 
