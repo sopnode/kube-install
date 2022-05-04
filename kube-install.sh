@@ -430,7 +430,10 @@ function cluster-networking-calico() {
     # download for patching
     local calico=$MYDIR/yaml/calico-settings.yaml
     curl -o $calico https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
-    yq --inplace '.spec.calicoNetwork.ipPools[0].cidr = "10.244.0.0/16"' $calico
+    #yq --inplace '.spec.calicoNetwork.ipPools[0].cidr = "10.244.0.0/16"' $calico
+    # the calico settings come with 2 sections
+    # change only in one location and not in the API server section
+    sed -i -e 's|192.168.0.0/16|10.244.0.0/16|' $calico
     kubectl create -f $calico
 }
 # untested yet
