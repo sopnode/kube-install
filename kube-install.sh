@@ -336,8 +336,8 @@ function cluster-init() {
         # as of 4.25.1, yq now correctly updates the first file
         # https://github.com/mikefarah/yq/issues/1193
         yq eval-all --inplace \
-            --from-file $MYDIR/yaml/manifests/add-uds-to-apiserver.yq \
-            $topatch $MYDIR/yaml/manifests/add-uds-to-apiserver.yaml
+            --from-file $MYDIR/yaml/patches/add-uds-to-apiserver.yq \
+            $topatch $MYDIR/yaml/patches/add-uds-to-apiserver.yaml
     }
 
     function inject-konnectivity-manifest() {
