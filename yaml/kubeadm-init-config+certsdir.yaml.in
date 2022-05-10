@@ -49,4 +49,4 @@ kind: KubeletConfiguration
 # see https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/
 # and https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 # Following allowedUnsafeSysctls option useful to run aether
-allowedUnsafeSysctls: "net.*"
+allowedUnsafeSysctls: ["net.*"]
