@@ -115,6 +115,10 @@ function install() {
 doc-install install "meta-target to install k8s, extras and helm"
 
 function install-calico() {
+    [[ -z "$CALICO_VERSION" ]] && {
+        echo cannot install calico kubectl plugin at this time - CALICO_VERSION empty
+        return
+    }
     function installed-calico-version() {
         local client_version=$(kubectl-calico version 2> /dev/null | grep -i client | cut -d: -f2)
         echo $client_version
@@ -133,7 +137,9 @@ function install-calico() {
     local client_version=$(installed-calico-version)
     [[ "${client_version}" == "v${CALICO_VERSION}" ]] || do_it=true
     if [ -n "$do_it" ]; then
-        curl -L https://github.com/projectcalico/calico/releases/download/v${CALICO_VERSION}/calicoctl-linux-amd64 -o /usr/bin/kubectl-calico
+        local url=https://github.com/projectcalico/calico/releases/download/v${CALICO_VERSION}/calicoctl-linux-amd64
+        echo fetching kubectl-calico from $url
+        curl -L $url -o /usr/bin/kubectl-calico
     fi
 
     echo "installed version of kubectl-calico is now $(installed-calico-version)"
@@ -424,16 +430,15 @@ function cluster-init() {
 # https://github.com/cri-o/cri-o/issues/4276
 function -wait-for-cni() {
     while true; do
-        local files=$(ls -l /etc/cni/net.d/* 2> /dev/null)
+        local files=$(ls /etc/cni/net.d/* 2> /dev/null)
         if [ -z "$files" ]; then
             echo "EMPTY /etc/cni/net.d - sleeping 4"
             sleep 4
             continue
         fi
-        echo "FOUND $files - sleeping 1 before restarting crio"
-        sleep 1
         break
     done
+    echo $files
 }
 
 function cluster-networking() {
@@ -441,13 +446,18 @@ function cluster-networking() {
     local flavour=$DEFAULT_NETWORKING
     [[ -n "$CNI_FLAVOUR" ]] && flavour=$CNI_FLAVOUR
     cluster-networking-${flavour}
-    -wait-for-cni
+    local cni_files=$(-wait-for-cni)
+
+    echo "FOUND $cni_files - sleeping 1 before restarting crio"
+    sleep 1
     systemctl restart crio
 
     # run postinstall if defined
-    local postinstall=networking-postinstall-${CNI_FLAVOUR}
-    type $postinstall >& /dev/null && $postinstall
-
+    local postinstall=networking-postinstall-${flavour}
+    type $postinstall >& /dev/null && {
+        echo running postinstall $postinstall
+        $postinstall
+    }
 }
 
 
@@ -574,9 +584,11 @@ $fetch"
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
 
-    -wait-for-cni
-    systemctl restart crio
+    local cni_files=$(-wait-for-cni)
 
+    echo "FOUND $cni_files - sleeping 1 before restarting crio"
+    sleep 1
+    systemctl restart crio
 }
 doc-kube join-cluster "worker node: join the cluster
 example: $0 join-cluster r2lab@sopnode-l1.inria.fr"
