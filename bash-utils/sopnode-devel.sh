@@ -77,12 +77,19 @@ function default-source() {
     echo fping-$key-pod
 }
 
+# find all the pod IPs in the namespace
+function all-pod-ips() {
+    kubectl get pod -o yaml | \
+     yq '.items[].status.podIP'
+}
 
 function -check-pings() {
     local source="$1"; shift
+    local dests="$@"
+    [[ -z "$dests" ]] && dests=$(all-pod-ips)
+
     local dest
-    local ip
-    for dest in "$@"; do
+    for dest in $dests; do
         local ip=$(pod-ip $dest)
         [[ -z "$ip" ]] && ip=$dest
         echo -n ====== FROM $source to $dest = $ip" -> "
@@ -97,11 +104,11 @@ function check-pings() { -check-pings $(default-source) "$@"; }
 function -check-dns() {
     local source="$1"; shift
     local names="$@"
-    [[ -z "$names" ]] && names="kubernetes faraday faraday.inria.fr github.com"
+    [[ -z "$names" ]] && names="kubernetes faraday.inria.fr github.com"
     local name
     for name in $names; do
         echo ====== FROM $source resolving $name" -> "
-        command="nslookup $name"
+        command="host $name"
         exec-in-container-from-podname $source $command
         [[ $? == 0 ]] && echo OK || echo KO
     done
@@ -142,9 +149,24 @@ function check-logs() {
     local pod
     for pod in $pods; do
         echo -n ====== GETTING LOG for $pod " -> "
-        command="kubectl logs -n default $pod"
+        command="kubectl logs -n default $pod --tail=3"
         echo $command
-        $command >& /dev/null
+        $command
+        [[ $? == 0 ]] && echo OK || echo KO
+    done
+}
+
+function check-execs() {
+    # from the root context this time
+    local pods="$@"
+    check-fitnode || return 1
+    [[ -z "$pods" ]] && pods="fping-w2-pod fping-w3-pod fping-$FITNODE-pod"
+    local pod
+    for pod in $pods; do
+        echo -n ====== GETTING LOG for $pod " -> "
+        command="kubectl exec -n default $pod -- hostname"
+        echo $command
+        $command
         [[ $? == 0 ]] && echo OK || echo KO
     done
 }
