@@ -70,23 +70,57 @@ function check-scrub-kube () {
 }
 
 ##############
+# test strategy is
+# w2: master
+# w3: regular worker
+# fitxx: some FIT node
+
+# use e.g.
+# set-fitnode 06
+# to choose which one is currently available for that test
+
+function set-fitnode() {
+    local arg="$1"; shift
+    arg=$(sed -e s/fit// <<< $arg)
+    export FITNODE=fit$(printf "%02d" $arg)
+}
+function check-fitnode() {
+    [[ -z "$FITNODE" ]] && { echo "use command e.g. 'set-fitnode 19' to define your FIT node"; return 1; }
+    return 0
+}
 
 
-function default-source() {
+# kick the test pod on each of the 3 nodes
+function start-testpods() {
+    local nodes="$@"
+    check-fitnode || return 1
+    [[ -z "$nodes" ]] && nodes="sopnode-w2.inria.fr sopnode-w3.inria.fr $FITNODE"
+    local node
+    for node in $nodes; do
+        ssh root@$node kube-install.sh testpod
+    done
+}
+
+
+# the test pod on the local box
+function local-pod() {
     local key=$(hostname | sed -e s/sopnode-// -e 's/\.inria.fr//')
     echo fping-$key-pod
 }
 
 # find all the pod IPs in the namespace
-function all-pod-ips() {
+function default-namespace-pod-ips() {
     kubectl get pod -o yaml | \
      yq '.items[].status.podIP'
 }
 
+
+# run ping from one pod to some provided IP addresses
+# which default to the IPs of all pods in the current namespace
 function -check-pings() {
     local source="$1"; shift
     local dests="$@"
-    [[ -z "$dests" ]] && dests=$(all-pod-ips)
+    [[ -z "$dests" ]] && dests=$(default-namespace-pod-ips)
 
     local dest
     for dest in $dests; do
@@ -98,9 +132,12 @@ function -check-pings() {
         [[ $? == 0 ]] && echo OK || echo KO
     done
 }
-function check-pings() { -check-pings $(default-source) "$@"; }
+# default
+function check-pings() { -check-pings $(local-pod) "$@"; }
 
 
+# solve DNS names from a pod
+# hard-wired defaults for the names
 function -check-dns() {
     local source="$1"; shift
     local names="$@"
@@ -113,9 +150,10 @@ function -check-dns() {
         [[ $? == 0 ]] && echo OK || echo KO
     done
 }
-function check-dns() { -check-dns $(default-source) "$@"; }
+function check-dns() { -check-dns $(local-pod) "$@"; }
 
 
+# open http(s) TCP connections to well-known https services
 function -check-https() {
     local source="$1"; shift
     local webs="$@"
@@ -128,19 +166,10 @@ function -check-https() {
         [[ $? == 0 ]] && echo OK || echo KO
     done
 }
-function check-https() { -check-https $(default-source) "$@"; }
+function check-https() { -check-https $(local-pod) "$@"; }
 
 
-function set-fitnode() {
-    local arg="$1"; shift
-    arg=$(sed -e s/fit// <<< $arg)
-    export FITNODE=fit$(printf "%02d" $arg)
-}
-function check-fitnode() {
-    [[ -z "$FITNODE" ]] && { echo "use command e.g. 'set-fitnode 19' to define your FIT node"; return 1; }
-    return 0
-}
-
+# test kubectl logs
 function check-logs() {
     # from the root context this time
     local pods="$@"
@@ -156,6 +185,8 @@ function check-logs() {
     done
 }
 
+
+# test kubectl exec
 function check-execs() {
     # from the root context this time
     local pods="$@"

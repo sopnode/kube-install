@@ -692,6 +692,11 @@ function pwd() {
     echo $MYDIR
 }
 
+function testpod() {
+    cd $MYDIR/kiada
+    ./testpod.sh
+}
+
 for subcommand in "$@"; do
     case "$subcommand" in
         help|--help) help-install; help-kube; help-inspect; exit 1;;
