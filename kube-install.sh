@@ -116,6 +116,11 @@ doc-install install "meta-target to install k8s, extras and helm"
 function install-extras() {
     [ -f /etc/fedora-release ] && dnf -y install git openssl netcat jq buildah
     [ -f /etc/lsb-release ]    && apt -y install git openssl netcat # jq
+
+    # calicoctl / aka kubectl-calico aka kubectl calico
+    [ -f /usr/bin/kubectl-calico ] || {
+        curl -L https://github.com/projectcalico/calico/releases/download/v3.22.2/calicoctl-linux-amd64 -o /usr/bin/kubectl-calico
+    }
 }
 doc-install install-extras "useful tools"
 
@@ -435,6 +440,17 @@ function cluster-networking-calico() {
     # change only in one location and not in the API server section
     sed -i -e 's|192.168.0.0/16|10.244.0.0/16|' $calico
     kubectl create -f $calico
+    # separate our 2 worlds (plain servers and R2lab/FIT nodes) into 2 separate ip-pools
+    function calicoctl() {
+        # somehow we have 1.22 and 1.23...
+        local function="$1"; shift
+        kubectl-calico $function --allow-version-mismatch "$@"
+    }
+    calicoctl delete ippool default-ipv4-ippool
+    local ippool
+    for ippool in /etc/kubernetes/calico-*-ippool.yaml; do
+        kubectl-calico create -f $ippool
+    done
 }
 # untested yet
 function cluster-networking-weave() {
