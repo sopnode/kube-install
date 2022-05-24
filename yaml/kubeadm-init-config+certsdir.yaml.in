@@ -25,7 +25,9 @@ apiServer:
   - ${K8S_API_ENDPOINT}
 
   # https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/
+  # following option service-node-port-range useful to run aether
   extraArgs:
+    service-node-port-range: "2000-36767"
     max-requests-inflight: "1000"
     max-mutating-requests-inflight: "500"
     default-watch-cache-size: "500"
@@ -40,3 +42,11 @@ controllerManager:
 #   # https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/
 #   extraArgs:
 #     address: 0.0.0.0
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+# kubelet specific options here
+# see https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/
+# and https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
+# Following allowedUnsafeSysctls option useful to run aether
+allowedUnsafeSysctls: ["net.*"]
