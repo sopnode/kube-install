@@ -46,7 +46,7 @@ function fit-deads() {
 function fit-label-nodes() {
     local nodes=$(-fit-nodes)
     [ -z "$nodes" ] && { echo "no fit node currently in the cluster"; return 1; }
-    kubectl label nodes $nodes r2lab/node=true
+    kubectl label nodes $nodes --overwrite r2lab/node=true
 }
 
 ###
