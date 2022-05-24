@@ -422,7 +422,7 @@ function cluster-init() {
 
 
 # https://github.com/cri-o/cri-o/issues/4276
-function -restart-crio-upon-cni-creation() {
+function -wait-for-cni() {
     while true; do
         local files=$(ls -l /etc/cni/net.d/* 2> /dev/null)
         if [ -z "$files" ]; then
@@ -432,7 +432,6 @@ function -restart-crio-upon-cni-creation() {
         fi
         echo "FOUND $files - sleeping 1 before restarting crio"
         sleep 1
-        systemctl restart crio
         break
     done
 }
@@ -442,7 +441,13 @@ function cluster-networking() {
     local flavour=$DEFAULT_NETWORKING
     [[ -n "$CNI_FLAVOUR" ]] && flavour=$CNI_FLAVOUR
     cluster-networking-${flavour}
-    -restart-crio-upon-cni-creation
+    -wait-for-cni
+    systemctl restart crio
+
+    # run postinstall if defined
+    local postinstall=networking-postinstall-${CNI_FLAVOUR}
+    type $postinstall >& /dev/null && $postinstall
+
 }
 
 
@@ -463,9 +468,13 @@ function cluster-networking-calico() {
     # change only in one location and not in the API server section
     sed -i -e 's|192.168.0.0/16|10.244.0.0/16|' $calico
     kubectl create -f $calico
+}
+
+function networking-postinstall-calico() {
+    install-calico
     # separate our 2 worlds (plain servers and R2lab/FIT nodes) into 2 separate ip-pools
     function calicoctl() {
-        # somehow we have 1.22 and 1.23...
+        # we easily have 1.22 and 1.23...
         local function="$1"; shift
         kubectl-calico $function --allow-version-mismatch "$@"
     }
@@ -565,7 +574,8 @@ $fetch"
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
 
-    -restart-crio-upon-cni-creation
+    -wait-for-cni
+    systemctl restart crio
 
 }
 doc-kube join-cluster "worker node: join the cluster
