@@ -12,7 +12,18 @@ export _GO_NODESTATUS='{{range .items}}{{.metadata.name}}:{{range .status.condit
 alias k-alives='kubectl get nodes -o go-template --template "$_GO_NODESTATUS" | grep "Ready=True" | cut -d: -f1'
 alias k-deads='kubectl get nodes -o go-template --template "$_GO_NODESTATUS" | grep -v "Ready=True" | cut -d: -f1'
 
+function calicoctl() { 
+    local function="$1"; shift
+    kubectl-calico $function --allow-version-mismatch "$@"
+}
+function get-pools() { kubectl calico --allow-version-mismatch get ippool "$@"; }
 function watch-nodes() { watch kubectl get node "$@"; }
+function watch-nodes-and-pools() {
+    watch "echo ==== NODES; kubectl get nodes $@; echo ==== POOLS; kubectl-calico --allow-version-mismatch get ippools $@"
+}
+function watch-2() { watch-nodes-and-pools; }
+
+
 function watch-pods() { watch kubectl get pod "$@"; }
 function watch-pods-wide() { watch-pods -o wide "$@"; }
 function watch-kube-pods() { watch-pods -n kube-system -o wide "$@"; }
@@ -22,7 +33,7 @@ function watch-crictl() { watch crictl ps "$@"; }
 function watch-everything() { watch kubectl get all -A "$@"; }
 function watch-everything-wide() { watch-everything -o wide "$@"; }
 function watch-services-and-pods() {
-    watch "echo ==== PODS; kubectl get pod $@; echo ==== SVCS; kubectl get svc $@" ;
+    watch "echo ==== PODS; kubectl get pod $@; echo ==== SVCS; kubectl get svc $@"
 }
 function watch-1() { watch-services-and-pods -A -o wide; }
 
