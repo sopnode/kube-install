@@ -28,6 +28,7 @@ function load-config() {
     # default for all
     export K8S_VERSION=1.23.6
     export CRIO_VERSION=1.22
+    export CALICO_VERSION=3.23.1
 
     if [[ -n "$strict" ]]; then
         # spot the config file for that host
@@ -107,20 +108,42 @@ doc-install update-os "dnf or apt update"
 
 function install() {
     install-k8s
-    install-extras
+    install-calico
     install-helm
+    install-extras
 }
 doc-install install "meta-target to install k8s, extras and helm"
+
+function install-calico() {
+    function installed-calico-version() {
+        local client_version=$(kubectl-calico version 2> /dev/null | grep -i client | cut -d: -f2)
+        echo $client_version
+    }
+
+    local force=""
+    while getopts "f" opt; do
+        case $opt in
+            f) force=true ;;
+        esac
+    done
+    # calicoctl / aka kubectl-calico aka kubectl calico
+    local do_it=""
+    [[ -n "$force" ]] && do_it=true
+    [[ -f /usr/bin/kubectl-calico ]] || do_it=true
+    local client_version=$(installed-calico-version)
+    [[ "${client_version}" == "v${CALICO_VERSION}" ]] || do_it=true
+    if [ -n "$do_it" ]; then
+        curl -L https://github.com/projectcalico/calico/releases/download/v${CALICO_VERSION}/calicoctl-linux-amd64 -o /usr/bin/kubectl-calico
+    fi
+
+    echo "installed version of kubectl-calico is now $(installed-calico-version)"
+}
 
 # all nodes
 function install-extras() {
     [ -f /etc/fedora-release ] && dnf -y install git openssl netcat jq buildah
     [ -f /etc/lsb-release ]    && apt -y install git openssl netcat # jq
 
-    # calicoctl / aka kubectl-calico aka kubectl calico
-    [ -f /usr/bin/kubectl-calico ] || {
-        curl -L https://github.com/projectcalico/calico/releases/download/v3.22.2/calicoctl-linux-amd64 -o /usr/bin/kubectl-calico
-    }
 }
 doc-install install-extras "useful tools"
 
@@ -449,7 +472,7 @@ function cluster-networking-calico() {
     calicoctl delete ippool default-ipv4-ippool
     local ippool
     for ippool in /etc/kubernetes/calico-*-ippool.yaml; do
-        kubectl-calico create -f $ippool
+        calicoctl create -f $ippool
     done
 }
 # untested yet
