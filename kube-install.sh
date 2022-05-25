@@ -488,7 +488,17 @@ function networking-postinstall-calico() {
         local function="$1"; shift
         kubectl-calico $function --allow-version-mismatch "$@"
     }
-    calicoctl delete ippool default-ipv4-ippool
+    echo "trying to delete default ippool - will try until success"
+    while true; do
+        calicoctl delete ippool default-ipv4-ippool
+        if [[ $? == 0 ]]; then
+            echo "OK - proceeding"
+            break
+        else
+            echo -n ". "
+            sleep 3
+        fi
+    done
     local ippool
     for ippool in /etc/kubernetes/calico-*-ippool.yaml; do
         calicoctl create -f $ippool
