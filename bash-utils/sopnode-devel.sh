@@ -108,10 +108,20 @@ function local-pod() {
     echo fping-$key-pod
 }
 
+# find all the pod names in the namespace
+function default-namespace-pod-names() {
+    kubectl get pod -o yaml | \
+     yq '.items[].metadata.name'
+}
 # find all the pod IPs in the namespace
 function default-namespace-pod-ips() {
     kubectl get pod -o yaml | \
      yq '.items[].status.podIP'
+}
+# find all the pod names+IPs in the namespace
+function default-namespace-pod-names-ips() {
+    kubectl get pod -o yaml | \
+     yq '.items[].metadata.name'
 }
 
 
@@ -121,6 +131,7 @@ function -check-pings() {
     local source="$1"; shift
     local dests="$@"
     [[ -z "$dests" ]] && dests=$(default-namespace-pod-ips)
+    local ok="true"
 
     local dest
     for dest in $dests; do
@@ -128,9 +139,12 @@ function -check-pings() {
         [[ -z "$ip" ]] && ip=$dest
         echo -n ====== FROM $source to $dest = $ip" -> "
         local command="ping -c 1 -w 2 $ip"
+        local success=OK
         exec-in-container-from-podname $source $command >& /dev/null
-        [[ $? == 0 ]] && echo OK || echo KO
+        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        -log-line check-ping $source $dest $success
     done
+    [[ -n "$ok" ]] && return 0 || return 1
 }
 # default
 function check-pings() { -check-pings $(local-pod) "$@"; }
@@ -138,19 +152,24 @@ function check-pings() { -check-pings $(local-pod) "$@"; }
 
 # solve DNS names from a pod
 # hard-wired defaults for the names
-function -check-dns() {
+function -check-dnss() {
     local source="$1"; shift
     local names="$@"
     [[ -z "$names" ]] && names="kubernetes faraday.inria.fr github.com"
+    local ok="true"
+
     local name
     for name in $names; do
         echo ====== FROM $source resolving $name" -> "
         command="host $name"
+        local success=OK
         exec-in-container-from-podname $source $command
-        [[ $? == 0 ]] && echo OK || echo KO
+        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        -log-line chek-dns $source $name $success
     done
+    [[ -n "$ok" ]] && return 0 || return 1
 }
-function check-dns() { -check-dns $(local-pod) "$@"; }
+function check-dnss() { -check-dnss $(local-pod) "$@"; }
 
 
 # open http(s) TCP connections to well-known https services
@@ -158,13 +177,18 @@ function -check-https() {
     local source="$1"; shift
     local webs="$@"
     [[ -z "$webs" ]] && webs="r2lab.inria.fr github.com 140.82.121.4 faraday.inria.fr"
+    local ok="true"
+
     local web
     for web in $webs; do
         echo ====== FROM $source opening a HTTP conn to $web:443 " -> "
         command="nc -z -v -w 3 $web 443"
+        local success=OK
         exec-in-container-from-podname $source $command
-        [[ $? == 0 ]] && echo OK || echo KO
+        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        -log-line check-http $source $web $success
     done
+    [[ -n "$ok" ]] && return 0 || return 1
 }
 function check-https() { -check-https $(local-pod) "$@"; }
 
@@ -175,14 +199,19 @@ function check-logs() {
     local pods="$@"
     check-fitnode || return 1
     [[ -z "$pods" ]] && pods="fping-w2-pod fping-w3-pod fping-$FITNODE-pod"
+    local ok="true"
+
     local pod
     for pod in $pods; do
         echo -n ====== GETTING LOG for $pod " -> "
         command="kubectl logs -n default $pod --tail=3"
         echo $command
+        local success=OK
         $command
-        [[ $? == 0 ]] && echo OK || echo KO
+        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        -log-line check-log $(hostname -s) $pod $success
     done
+    [[ -n "$ok" ]] && return 0 || return 1
 }
 
 
@@ -192,12 +221,71 @@ function check-execs() {
     local pods="$@"
     check-fitnode || return 1
     [[ -z "$pods" ]] && pods="fping-w2-pod fping-w3-pod fping-$FITNODE-pod"
+    local ok="true"
+
     local pod
     for pod in $pods; do
-        echo -n ====== GETTING LOG for $pod " -> "
+        echo -n ====== EXECing in $pod " -> "
         command="kubectl exec -n default $pod -- hostname"
         echo $command
+        local success=OK
         $command
-        [[ $? == 0 ]] && echo OK || echo KO
+        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        -log-line check-exec $(hostname -s) $pod $success
     done
+    [[ -n "$ok" ]] && return 0 || return 1
+}
+
+function check-all() {
+    check-pings &
+    check-dnss &
+    check-https &
+    check-logs &
+    check-execs &
+}
+
+
+# run one of thoses tests repetitively
+# store stats in a file named ~/TESTS.csv
+# with a format like this
+# DATE;test_function;FROM;TO;SUCCESS
+function -log-line() {
+    local test_function="$1"; shift
+    local from="$1"; shift
+    local to="$1"; shift
+    local success="$1"; shift
+
+    local hostname=$(hostname -s)
+    local date=$(date "+%Y-%m-%d:%H:%M:%S")
+
+    echo "${test_function};${from};${to};${success};${date}" >> ~/TESTS.csv
+}
+
+# run one of thoses tests repetitively
+# store stats in a file named ~/TESTS.csv
+# with a format like this
+# test_function;LOCALHOSTNAME;FITNODE;SUCCESS;DATE;kubeadmRPMINFO
+function -run-n-times() {
+    local test_function="$1"; shift
+    local count="$1"; shift
+    local period="$1"; shift
+
+    local counter=1
+    while [[ $counter -le $count ]]; do
+        echo "$test_function ${counter}/${count}"
+        local success=OK
+        $test_function || success=KO
+        -log-line $test_function $(hostname -s) ALL $success
+        sleep $period
+        counter=$(($counter +1))
+    done
+}
+
+# how many time do we try to run all the tests
+function run-all() {
+    local how_many="$1"; shift
+    local period="$1"; shift
+    [[ -z "$how_many" ]] && how_many=30
+    [[ -z "$period" ]] && period=5
+    -run-n-times check-all $how_many $period
 }
