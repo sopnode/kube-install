@@ -588,6 +588,12 @@ $fetch"
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
 
+    # set label for remote nodes
+    local hostname=$(hostname -s)
+    if hostname -s | grep -q fit; then
+        kubectl label nodes $hostname --overwrite r2lab/node=true
+    fi
+
     local cni_files=$(-wait-for-cni)
 
     echo "FOUND $cni_files - sleeping 1 before restarting crio"

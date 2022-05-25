@@ -165,7 +165,7 @@ function -check-dnss() {
         local success=OK
         exec-in-container-from-podname $source $command
         [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
-        -log-line chek-dns $source $name $success
+        -log-line check-dns $source $name $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
 }
