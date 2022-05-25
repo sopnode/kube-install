@@ -1,9 +1,0 @@
-apiVersion: projectcalico.org/v3
-kind: IPPool
-metadata:
-  name: main-ippool
-spec:
-  cidr: 192.168.100.0/24
-  vxlanMode: CrossSubnet
-  natOutgoing: false
-  nodeSelector: r2lab/node != "true"

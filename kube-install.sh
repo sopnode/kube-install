@@ -108,13 +108,13 @@ doc-install update-os "dnf or apt update"
 
 function install() {
     install-k8s
-    install-calico
+    install-calico-plugin
     install-helm
     install-extras
 }
 doc-install install "meta-target to install k8s, extras and helm"
 
-function install-calico() {
+function install-calico-plugin() {
     [[ -z "$CALICO_VERSION" ]] && {
         echo cannot install calico kubectl plugin at this time - CALICO_VERSION empty
         return
@@ -429,8 +429,10 @@ function cluster-init() {
 
 # https://github.com/cri-o/cri-o/issues/4276
 function -wait-for-cni() {
+    local cni_dir=/etc/cni/net.d/
+    echo "Waiting for CNI files to show up in ${cni_dir}"
     while true; do
-        local files=$(ls /etc/cni/net.d/* 2> /dev/null)
+        local files=$(ls ${cni_dir}/* 2> /dev/null)
         if [ -z "$files" ]; then
             echo "EMPTY /etc/cni/net.d - sleeping 4"
             sleep 4
@@ -453,7 +455,7 @@ function cluster-networking() {
     systemctl restart crio
 
     # run postinstall if defined
-    local postinstall=networking-postinstall-${flavour}
+    local postinstall=networking-${flavour}-postinstall
     type $postinstall >& /dev/null && {
         echo running postinstall $postinstall
         $postinstall
@@ -471,37 +473,29 @@ function cluster-networking-flannel() {
 function cluster-networking-calico() {
     kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
     # download for patching
-    local calico=$MYDIR/yaml/calico-settings.yaml
-    curl -o $calico https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
+    local calico_settings=$MYDIR/yaml/calico-settings.yaml
+    curl -o $calico_settings https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
     #yq --inplace '.spec.calicoNetwork.ipPools[0].cidr = "10.244.0.0/16"' $calico
     # the calico settings come with 2 sections
     # change only in one location and not in the API server section
-    sed -i -e 's|192.168.0.0/16|10.244.0.0/16|' $calico
-    kubectl create -f $calico
+    yq --inplace \
+      'with(select(document_index==0).spec.calicoNetwork.ipPools[0];
+        .cidr="10.244.0.0/16"
+        | .nodeSelector="r2lab/node != \"true\""
+         )' \
+      $calico_settings
+    #sed -i -e 's|192.168.0.0/16|10.244.0.0/16|' $calico_settings
+    kubectl create -f $calico_settings
 }
 
-function networking-postinstall-calico() {
-    install-calico
-    # separate our 2 worlds (plain servers and R2lab/FIT nodes) into 2 separate ip-pools
-    function calicoctl() {
-        # we easily have 1.22 and 1.23...
-        local function="$1"; shift
-        kubectl-calico $function --allow-version-mismatch "$@"
-    }
-    echo "trying to delete default ippool - will try until success"
-    while true; do
-        calicoctl delete ippool default-ipv4-ippool
-        if [[ $? == 0 ]]; then
-            echo "OK - proceeding"
-            break
-        else
-            echo -n ". "
-            sleep 3
-        fi
-    done
+# separate our 2 worlds (plain servers and R2lab/FIT nodes) into 2 separate ip-pools
+function networking-calico-postinstall() {
+    install-calico-plugin
+    echo "BREAKPOINT - it's yours - type control-D to resume"
+    bash
     local ippool
     for ippool in /etc/kubernetes/calico-*-ippool.yaml; do
-        calicoctl create -f $ippool
+        kubectl-calico --allow-version-mismatch create -f $ippool
     done
 }
 # untested yet
@@ -643,7 +637,6 @@ function -undo-cluster() {
     source configs/$(hostname --short)-config.sh
     local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
 
-    echo "You're going to have to answer 'yes' here"
     echo y | kubeadm reset
     rm -rf ${output_dir}
     rm -rf /etc/kubernetes/*
