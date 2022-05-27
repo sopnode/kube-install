@@ -33,3 +33,11 @@ print(f"{latest=}")
 df1, df2, *_ = postprocess.load(latest)
 postprocess.show_all(df1, df2)
 ```
+
+```{code-cell} ipython3
+# for instance, extracting the 'check-http' bar from the upper-left diagram
+# would mean to do
+extract = df1[df1['wired-from'] & (df1['test']=='check-http')]
+# how many entries
+extract.shape[0]
+```

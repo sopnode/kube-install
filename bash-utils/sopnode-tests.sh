@@ -158,7 +158,7 @@ function check-pings() { -check-pings $(local-pod) "$@"; }
 function -check-dnss() {
     local source="$1"; shift
     local names="$@"
-    [[ -z "$names" ]] && names="kubernetes faraday.inria.fr github.com"
+    [[ -z "$names" ]] && names="kubernetes r2lab.inria.fr github.com"
     local ok="true"
 
     local name
@@ -179,7 +179,7 @@ function check-dnss() { -check-dnss $(local-pod) "$@"; }
 function -check-https() {
     local source="$1"; shift
     local webs="$@"
-    [[ -z "$webs" ]] && webs="r2lab.inria.fr github.com 140.82.121.4 faraday.inria.fr"
+    [[ -z "$webs" ]] && webs="r2lab.inria.fr github.com 140.82.121.4"
     local ok="true"
 
     local web
