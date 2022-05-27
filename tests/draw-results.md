@@ -86,3 +86,19 @@ extract = df1[df1['wired-from'] & (df1['test']=='check-http')]
 # how many entries
 extract.shape[0]
 ```
+
+```{code-cell} ipython3
+# for instance, extracting the 'check-http' bar from the upper-left diagram
+# would mean to do
+extract = df2[~df2['wired-from'] & ~df2['wired-to'] & (df2['test']=='check-ping')]
+# how many entries
+extract.shape[0]
+```
+
+```{code-cell} ipython3
+
+```
+
+```{code-cell} ipython3
+
+```
