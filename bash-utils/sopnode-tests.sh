@@ -108,21 +108,24 @@ function local-pod() {
     echo fping-$key-pod
 }
 
-# find all the pod names in the namespace
-function default-namespace-pod-names() {
-    kubectl get pod -o yaml | \
-     yq '.items[].metadata.name'
-}
 # find all the pod IPs in the namespace
 function default-namespace-pod-ips() {
     kubectl get pod -o yaml | \
      yq '.items[].status.podIP'
 }
+# find all the pod names in the namespace
+# xxx works but not used yet
+# function default-namespace-pod-names() {
+#     kubectl get pod -o yaml | \
+#      yq '.items[].metadata.name'
+# }
 # find all the pod names+IPs in the namespace
-function default-namespace-pod-names-ips() {
-    kubectl get pod -o yaml | \
-     yq '.items[].metadata.name'
-}
+# xxx not ready - can't figure out to
+# produce this simply using yq
+# function default-namespace-pod-names-ips() {
+#     kubectl get pod -o yaml | \
+#      yq '.items[].metadata.name'
+# }
 
 
 # run ping from one pod to some provided IP addresses
@@ -288,4 +291,8 @@ function run-all() {
     [[ -z "$how_many" ]] && how_many=30
     [[ -z "$period" ]] && period=5
     -run-n-times check-all $how_many $period
+}
+
+function clear-logs() {
+    rm -f ~/TESTS.csv
 }
