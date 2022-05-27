@@ -76,7 +76,7 @@ function check-scrub-kube () {
 # fitxx: some FIT node
 
 # use e.g.
-# set-fitnode 06
+# set-fitnode 06 or set-fitnode fit06
 # to choose which one is currently available for that test
 
 function set-fitnode() {
