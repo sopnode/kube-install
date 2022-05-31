@@ -146,18 +146,18 @@ function -check-landmarks() {
 
     # using curl on the API endpoint
     dest="10.96.0.1"
-    echo -n "====== check-landmark: FROM $source to $dest (curl) -> "
+    local P="====== check-landmark: FROM $source to $dest (curl) -> "
     command="curl -k --connect-timeout 1 https://$dest:443/"
     exec-in-container-from-podname $source $command >& /dev/null
-    [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+    [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
     -log-line check-landmark $source $dest $success
 
     # using host on the DNS endpoint
     dest="10.96.0.10"
-    echo -n "====== check-landmark: FROM $source to $dest (host) -> "
+    local P="====== check-landmark: FROM $source to $dest (host) -> "
     command="host -W 1 github.com $dest"
     exec-in-container-from-podname $source $command >& /dev/null
-    [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+    [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
     -log-line check-landmark $source $dest $success
 
 }
@@ -176,11 +176,11 @@ function -check-pings() {
     for dest in $dests; do
         local ip=$(get-pod-ip $dest)
         [[ -z "$ip" ]] && ip=$dest
-        echo -n ====== check-ping: FROM $source to $dest = $ip" -> "
+        local P="====== check-ping: FROM $source to $dest = $ip -> "
         local command="ping -c 1 -w 2 $ip"
         local success=OK
         exec-in-container-from-podname $source $command >& /dev/null
-        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
         -log-line check-ping $source $dest $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
@@ -199,11 +199,11 @@ function -check-dnss() {
 
     local name
     for name in $names; do
-        echo ====== check-dns: FROM $source resolving $name" -> "
+        local P="====== check-dns: FROM $source resolving $name -> "
         command="host $name"
         local success=OK
         exec-in-container-from-podname $source $command
-        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
         -log-line check-dns $source $name $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
@@ -220,11 +220,11 @@ function -check-https() {
 
     local web
     for web in $webs; do
-        echo ====== check-http: FROM $source opening a HTTP conn to $web:443 " -> "
+        local P="====== check-http: FROM $source opening a HTTP conn to $web:443 -> "
         command="nc -z -v -w 3 $web 443"
         local success=OK
         exec-in-container-from-podname $source $command
-        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
         -log-line check-http $source $web $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
@@ -243,12 +243,12 @@ function check-logs() {
     local pod
     local hostname=$(hostname -s)
     for pod in $pods; do
-        echo -n ====== $hostname: GETTING LOG for $pod " -> "
+        local P="====== $hostname: GETTING LOG for $pod -> "
         command="kubectl logs -n default $pod --tail=3"
         echo $command
         local success=OK
         $command
-        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
         -log-line check-log $hostname $pod $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
@@ -266,12 +266,12 @@ function check-execs() {
     local pod
     local hostname=$(hostname -s)
     for pod in $pods; do
-        echo -n ====== $hostname: EXECing in $pod " -> "
+        local P="====== $hostname: EXECing in $pod -> "
         command="kubectl exec -n default $pod -- hostname"
         echo $command
         local success=OK
         $command
-        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
         -log-line check-exec $hostname $pod $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
