@@ -84,13 +84,24 @@ function -steps() {
 function full-monty()   { -steps load-image refresh leave create join testpod; }
 function rerun()        { -steps            refresh leave create join testpod; }
 
-
-if [[ -z "$@" ]]; then
+function usage() {
     echo "Usage: $0 subcommand1 .. subcommandn"
     echo "subcommand 'full-monty to redo everything including rhubarbe-load'"
     echo "subcommand 'rerun to redo everything except rhubarbe-load'"
     exit 1
-fi
+}
+
+while getopts "f:r:p:" opt; do
+    case $opt in
+        f) FITNODE=$OPTARG;;
+        r) RUNS=$OPTARG;;
+        p) PERIOD=$OPTARG;;
+        \?) usage ;;
+    esac
+done
+shift $(($OPTIND - 1))
+[[ -z "$@" ]] && usage
+
 
 for subcommand in "$@"; do
     $subcommand
