@@ -479,24 +479,26 @@ function cluster-networking-calico() {
     # the calico settings come with 2 sections
     # change only in one location and not in the API server section
     yq --inplace \
-      'with(select(document_index==0).spec.calicoNetwork.ipPools[0];
-        .cidr="10.244.0.0/16"
-        | .nodeSelector="r2lab/node != \"true\""
+      'with(select(document_index==0).spec.calicoNetwork;
+         .bgp="Disabled"
+         | .ipPools[0].cidr="10.244.0.0/16"
+         | .ipPools[0].encapsulation="VXLAN"
+         | .ipPools[0].nodeSelector="r2lab/node != \"true\""
          )' \
       $calico_settings
-    #sed -i -e 's|192.168.0.0/16|10.244.0.0/16|' $calico_settings
     kubectl create -f $calico_settings
 }
 
 # separate our 2 worlds (plain servers and R2lab/FIT nodes) into 2 separate ip-pools
 function networking-calico-postinstall() {
     install-calico-plugin
-    echo "BREAKPOINT - it's yours - type control-D to resume"
+    # xxx somehow this command fails when run in this shell, but succeeds from another shell...
+    local command="kubectl-calico --allow-version-mismatch create -f /etc/kubernetes/calico-r2lab-ippool.yaml"
+    echo "BREAKPOINT"
+    echo the command to run is
+    echo $command
+    echo "type control-D to resume where you're done"
     bash
-    local ippool
-    for ippool in /etc/kubernetes/calico-*-ippool.yaml; do
-        kubectl-calico --allow-version-mismatch create -f $ippool
-    done
 }
 # untested yet
 function cluster-networking-weave() {
