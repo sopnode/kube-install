@@ -472,8 +472,8 @@ function cluster-networking-flannel() {
 }
 function cluster-networking-calico() {
     kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-    # download for patching
-    local calico_settings=$MYDIR/yaml/calico-settings.yaml
+    # download before patching
+    local calico_settings=/etc/kubernetes/calico-settings.yaml
     curl -o $calico_settings https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
     # the calico settings come with 2 sections
     # change only in one location and not in the API server section
