@@ -475,13 +475,12 @@ function cluster-networking-calico() {
     # download for patching
     local calico_settings=$MYDIR/yaml/calico-settings.yaml
     curl -o $calico_settings https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
-    #yq --inplace '.spec.calicoNetwork.ipPools[0].cidr = "10.244.0.0/16"' $calico
     # the calico settings come with 2 sections
     # change only in one location and not in the API server section
     yq --inplace \
       'with(select(document_index==0).spec.calicoNetwork;
          .bgp="Disabled"
-         | .ipPools[0].cidr="10.244.0.0/16"
+         | .ipPools[0].cidr="10.244.0.0/18"
          | .ipPools[0].encapsulation="VXLAN"
          | .ipPools[0].nodeSelector="r2lab/node != \"true\""
          )' \
