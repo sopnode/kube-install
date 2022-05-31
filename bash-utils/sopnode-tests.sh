@@ -144,7 +144,7 @@ function -check-landmarks() {
 
     local dest
     for dest in $dests; do
-        echo -n ====== FROM $source to $dest" -> "
+        echo -n ====== check-landmark: FROM $source to $dest" -> "
         local command="ping -c 1 -w 2 $dest"
         local success=OK
         exec-in-container-from-podname $source $command >& /dev/null
@@ -168,7 +168,7 @@ function -check-pings() {
     for dest in $dests; do
         local ip=$(get-pod-ip $dest)
         [[ -z "$ip" ]] && ip=$dest
-        echo -n ====== FROM $source to $dest = $ip" -> "
+        echo -n ====== check-ping: FROM $source to $dest = $ip" -> "
         local command="ping -c 1 -w 2 $ip"
         local success=OK
         exec-in-container-from-podname $source $command >& /dev/null
@@ -191,7 +191,7 @@ function -check-dnss() {
 
     local name
     for name in $names; do
-        echo ====== FROM $source resolving $name" -> "
+        echo ====== check-dns: FROM $source resolving $name" -> "
         command="host $name"
         local success=OK
         exec-in-container-from-podname $source $command
@@ -212,7 +212,7 @@ function -check-https() {
 
     local web
     for web in $webs; do
-        echo ====== FROM $source opening a HTTP conn to $web:443 " -> "
+        echo ====== check-http: FROM $source opening a HTTP conn to $web:443 " -> "
         command="nc -z -v -w 3 $web 443"
         local success=OK
         exec-in-container-from-podname $source $command
@@ -233,14 +233,15 @@ function check-logs() {
     local ok="true"
 
     local pod
+    local hostname=$(hostname -s)
     for pod in $pods; do
-        echo -n ====== GETTING LOG for $pod " -> "
+        echo -n ====== $hostname: GETTING LOG for $pod " -> "
         command="kubectl logs -n default $pod --tail=3"
         echo $command
         local success=OK
         $command
         [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
-        -log-line check-log $(hostname -s) $pod $success
+        -log-line check-log $hostname $pod $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
 }
@@ -255,14 +256,15 @@ function check-execs() {
     local ok="true"
 
     local pod
+    local hostname=$(hostname -s)
     for pod in $pods; do
-        echo -n ====== EXECing in $pod " -> "
+        echo -n ====== $hostname: EXECing in $pod " -> "
         command="kubectl exec -n default $pod -- hostname"
         echo $command
         local success=OK
         $command
         [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
-        -log-line check-exec $(hostname -s) $pod $success
+        -log-line check-exec $hostname $pod $success
     done
     [[ -n "$ok" ]] && return 0 || return 1
 }
