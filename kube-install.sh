@@ -1,4 +1,5 @@
 ########## pseudo docstrings
+COMMAND=$0
 MYDIR=$(dirname $(readlink -f $BASH_SOURCE))
 
 # the way this is installed on the sopnodes is
@@ -446,6 +447,7 @@ function -wait-for-cni() {
 function cluster-networking() {
 
     local flavour=$DEFAULT_NETWORKING
+    # use env variable if defined
     [[ -n "$CNI_FLAVOUR" ]] && flavour=$CNI_FLAVOUR
     cluster-networking-${flavour}
     local cni_files=$(-wait-for-cni)
@@ -493,11 +495,13 @@ function networking-calico-postinstall() {
     install-calico-plugin
     # xxx somehow this command fails when run in this shell, but succeeds from another shell...
     local command="kubectl-calico --allow-version-mismatch create -f /etc/kubernetes/calico-r2lab-ippool.yaml"
-    echo "BREAKPOINT"
-    echo the command to run is
+    echo "WARNING"
+    echo "the command to run is"
     echo $command
-    echo "type control-D to resume where you're done"
-    bash
+    echo "however for some reason this does not work properly from within create-cluster"
+    echo "so you might need to run the following command after create-cluster has finished"
+    echo "$COMMAND networking-calico-postinstall"
+    $command
 }
 # untested yet
 function cluster-networking-weave() {
