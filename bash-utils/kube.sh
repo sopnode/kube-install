@@ -4,7 +4,9 @@
 
 # find all the node names
 export _GO_NODENAMES='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}'
-alias k-nodes='kubectl get nodes -o go-template --template "$_GO_NODENAMES"'
+function k-nodes() {
+    kubectl get nodes -o go-template --template "$_GO_NODENAMES"
+}
 
 #would work too
 #export _GO_NODESTATUS='{{range .items}}{{.metadata.name}}:{{range .status.conditions}}{{.type}}={{.status}};{{end}}{{"\n"}}{{end}}'
