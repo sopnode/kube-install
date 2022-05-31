@@ -31,7 +31,7 @@ def load(filename):
     # split into 2
     # check-dns and check-http are really checking against the outside world
     # so it's not something that can be classified into cross or straight
-    single_tests = df.test.isin(("check-dns", "check-http"))
+    single_tests = df.test.isin(("check-landmark", "check-dns", "check-http"))
     df1 = df[single_tests].copy()
     df2 = df[~single_tests].copy()
 

@@ -56,7 +56,7 @@ we show:
 
 * the B results are shown in 4 diagrams:
   * on the top row we have the tests that run on the wired side, so obviously the bottom is for tests that run on the wireless side
-  * the left hand side is for tests that target the wired side, and the right had side is for tests that target the 
+  * the left hand side is for tests that target the wired side, and the right had side is for tests that target the
 
 +++
 
@@ -67,8 +67,13 @@ import postprocess
 ```
 
 ```{code-cell} ipython3
-#df1, df2, *_ = postprocess.load("SUMMARY-05-25-18-03-41.csv")
-#postprocess.show_all(df1, df2)
+df1, df2, *_ = postprocess.load("SUMMARY-05-27-13-48-27.csv")
+postprocess.show_all(df1, df2)
+```
+
+```{code-cell} ipython3
+df1, df2, *_ = postprocess.load("SUMMARY-05-30-16-05-53-outgoingnat=false.csv")
+postprocess.show_all(df1, df2)
 ```
 
 ```{code-cell} ipython3
@@ -95,10 +100,4 @@ extract = df2[~df2['wired-from'] & ~df2['wired-to'] & (df2['test']=='check-ping'
 extract.shape[0]
 ```
 
-```{code-cell} ipython3
-
-```
-
-```{code-cell} ipython3
-
-```
+****

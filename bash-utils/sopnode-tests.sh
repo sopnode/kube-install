@@ -109,16 +109,21 @@ function local-pod() {
 }
 
 # find all the pod IPs in the namespace
-function default-namespace-pod-ips() {
-    kubectl get pod -o yaml | \
-     yq '.items[].status.podIP'
-}
+#function default-namespace-pod-ips() {
+#    kubectl get pod -o yaml | \
+#        yq '.items[].status.podIP'
+#}
 # find all the pod names in the namespace
-# xxx works but not used yet
-# function default-namespace-pod-names() {
-#     kubectl get pod -o yaml | \
-#      yq '.items[].metadata.name'
-# }
+function default-namespace-pod-names() {
+    kubectl get pod -o yaml | \
+        yq '.items[].metadata.name'
+}
+function get-pod-ip() {
+    local pod="$1"; shift
+    kubectl get pod $pod -o yaml | \
+        yq '.status.podIP'
+
+}
 # find all the pod names+IPs in the namespace
 # xxx not ready - can't figure out to
 # produce this simply using yq
@@ -128,17 +133,40 @@ function default-namespace-pod-ips() {
 # }
 
 
-# run ping from one pod to some provided IP addresses
-# which default to the IPs of all pods in the current namespace
-function -check-pings() {
+# run ping from one pod to some hard-wired IP addresses
+# that are fixed and should always be reachable
+
+function -check-landmarks() {
     local source="$1"; shift
     local dests="$@"
-    [[ -z "$dests" ]] && dests=$(default-namespace-pod-ips)
+    [[ -z "$dests" ]] && dests="10.96.0.1 10.96.0.10"
     local ok="true"
 
     local dest
     for dest in $dests; do
-        local ip=$(pod-ip $dest)
+        echo -n ====== FROM $source to $dest" -> "
+        local command="ping -c 1 -w 2 $dest"
+        local success=OK
+        exec-in-container-from-podname $source $command >& /dev/null
+        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+        -log-line check-landmark $source $dest $success
+    done
+    [[ -n "$ok" ]] && return 0 || return 1
+}
+# default
+function check-landmarks() { -check-landmarks $(local-pod) "$@"; }
+
+
+# run ping from one pod to all local pods in the namespace
+function -check-pings() {
+    local source="$1"; shift
+    local dests="$@"
+    [[ -z "$dests" ]] && dests=$(default-namespace-pod-names)
+    local ok="true"
+
+    local dest
+    for dest in $dests; do
+        local ip=$(get-pod-ip $dest)
         [[ -z "$ip" ]] && ip=$dest
         echo -n ====== FROM $source to $dest = $ip" -> "
         local command="ping -c 1 -w 2 $ip"
@@ -240,6 +268,7 @@ function check-execs() {
 }
 
 function check-all() {
+    check-landmarks &
     check-pings &
     check-dnss &
     check-https &
