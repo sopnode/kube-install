@@ -133,25 +133,33 @@ function get-pod-ip() {
 # }
 
 
-# run ping from one pod to some hard-wired IP addresses
+# from one pod, talk to these 2 hard-wired IP addresses
 # that are fixed and should always be reachable
+# using curl and host respectively
 
 function -check-landmarks() {
     local source="$1"; shift
     local dests="$@"
     [[ -z "$dests" ]] && dests="10.96.0.1 10.96.0.10"
     local ok="true"
-
     local dest
-    for dest in $dests; do
-        echo -n ====== check-landmark: FROM $source to $dest" -> "
-        local command="ping -c 1 -w 2 $dest"
-        local success=OK
-        exec-in-container-from-podname $source $command >& /dev/null
-        [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
-        -log-line check-landmark $source $dest $success
-    done
-    [[ -n "$ok" ]] && return 0 || return 1
+
+    # using curl on the API endpoint
+    dest="10.96.0.1"
+    echo -n "====== check-landmark: FROM $source to $dest (curl) -> "
+    command="curl -k --connect-timeout 1 https://$dest:443/"
+    exec-in-container-from-podname $source $command >& /dev/null
+    [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+    -log-line check-landmark $source $dest $success
+
+    # using host on the DNS endpoint
+    dest="10.96.0.10"
+    echo -n "====== check-landmark: FROM $source to $dest (host) -> "
+    command="host -W 1 github.com $dest"
+    exec-in-container-from-podname $source $command >& /dev/null
+    [[ $? == 0 ]] && echo OK || { echo KO; ok=""; success=KO; }
+    -log-line check-landmark $source $dest $success
+
 }
 # default
 function check-landmarks() { -check-landmarks $(local-pod) "$@"; }
