@@ -306,7 +306,8 @@ function -run-n-times() {
 
     local counter=1
     while [[ $counter -le $count ]]; do
-        echo "$test_function ${counter}/${count}"
+        local header="$(hostname -s) $(date +%M:%S)"
+        echo "$header $test_function ${counter}/${count}"
         local success=OK
         $test_function || success=KO
         -log-line $test_function $(hostname -s) ALL $success
