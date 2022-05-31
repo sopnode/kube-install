@@ -40,11 +40,26 @@ there are 2 kinds of tests:
 
 and namely:
 
-* A. `check-dns` will check if names can be resolved from the pod; the names to resolve are `kubernetes` `r2lab.inria.fr` and `github.com`
-* A. `check-http` will check for outside connectivity, by opening a tcp connection to some outside hosts; this targets `r2lab.inria.fr` `github.com` and `140.82.121.4` so obviously, if check-dns fails, we can get a maximum of 2/3 on this one
-* B. `check-ping` will run ping inside the testpod targetting the IP of all the other testpods (including itself); 
+* A. `check-dns` will check if names can be resolved **from the testpod**; the names to resolve are `kubernetes` `r2lab.inria.fr` and `github.com`
+* A. `check-http` will check for outside connectivity **from a testpod**, by opening a tcp connection to some outside hosts; this targets `r2lab.inria.fr` `github.com` and `140.82.121.4` so obviously, if check-dns fails, we can get a maximum of 2/3 on this one
+* A. `check-landmark` uses ping to check connectivity **from the testpod** to the fixed IP addresses `10.96.0.1` (aka kubernetes) and `10.96.0.10` (the IP for the DNS service)  
+  **NOTE: this is failing and that may just as well be the expected behaviour...**
+
+*** 
+
+* B. `check-ping` will run ping **inside the testpod** targetting the IP of all the other testpods (including itself); 
 * B. `check-log` will run **inside the host** a call to `kubelet logs` for all testpods
 * B. `check-exec` will run **inside the host** a call to `kubelet exec` for all testpods
+
++++
+
+## notes on those tests
+
++++
+
+* about `check-landmark`
+  * apparently the DNS IP endpoint on `10.96.0.10` is configured to NOT answer ICMP; if tested on the wired side only, a ping to `10.96.0.10` from the testpod will fail, BUT that IP address does solve hostnamed when doing e.g. `host github.com 10.96.0.10`
+  * not sure how 
 
 +++
 
@@ -55,41 +70,49 @@ we show:
 * the A results in 2 diagrams; on the left hand side is when the test runs on the wired side, and on the right hand side the tests that run on the wireless side
 
 * the B results are shown in 4 diagrams:
-  * on the top row we have the tests that run on the wired side, so obviously the bottom is for tests that run on the wireless side
-  * the left hand side is for tests that target the wired side, and the right had side is for tests that target the
-
-+++
-
-## the results
+  * here again the tests that **originate on the wired** side are shown on the **left hand side**; so obviously the right hand side is for tests that run on the wireless side
+  * on the **top row** we have the tests that run **towards the wired side**, so obviously the bottom is for tests that run towards the wireless side
 
 ```{code-cell} ipython3
 import postprocess
 ```
 
+## past results
+
 ```{code-cell} ipython3
-df1, df2, *_ = postprocess.load("SUMMARY-05-27-13-48-27.csv")
-postprocess.show_all(df1, df2)
+#df1, df2, *_ = postprocess.load("SUMMARY-05-27-13-48-27.csv")
+#postprocess.show_all(df1, df2)
 ```
 
 ```{code-cell} ipython3
-df1, df2, *_ = postprocess.load("SUMMARY-05-30-16-05-53-outgoingnat=false.csv")
+#df1, df2, *_ = postprocess.load("SUMMARY-05-30-16-05-53-outgoingnat=false.csv")
+#postprocess.show_all(df1, df2)
+```
+
+```{code-cell} ipython3
+df1, df2, *_ = postprocess.load("SUMMARY-05-31-09-49-39-mask18.csv")
 postprocess.show_all(df1, df2)
 ```
+
+## latest results
 
 ```{code-cell} ipython3
 latest = postprocess.latest_csv()
-print(f"{latest=}")
-
 df1, df2, *_ = postprocess.load(latest)
+
+print(f"{latest=}, {df1.shape=} {df2.shape=}")
 postprocess.show_all(df1, df2)
 ```
+
+## digging...
 
 ```{code-cell} ipython3
 # for instance, extracting the 'check-http' bar from the upper-left diagram
 # would mean to do
-extract = df1[df1['wired-from'] & (df1['test']=='check-http')]
+extract = df1[(~df1['wired-from']) & (df1['test']=='check-landmark')]
 # how many entries
-extract.shape[0]
+print(f"{extract.shape[0]=}")
+extract.head()
 ```
 
 ```{code-cell} ipython3

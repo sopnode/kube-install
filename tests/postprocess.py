@@ -69,15 +69,15 @@ def draw_df2(df2, ulax, urax, llax, lrax):
     df2 = df2[['test', 'success', 'wired-from', 'wired-to']]
     #measures = df2.test.unique()
     ul = df2[ df2['wired-from']   &   df2['wired-to' ]][['test', 'success']]
-    ur = df2[ df2['wired-from']   & (~df2['wired-to'])][['test', 'success']]
-    ll = df2[(~df2['wired-from']) &   df2['wired-to' ]][['test', 'success']]
+    ur = df2[(~df2['wired-from']) &   df2['wired-to' ]][['test', 'success']]
+    ll = df2[ df2['wired-from']   & (~df2['wired-to'])][['test', 'success']]
     lr = df2[(~df2['wired-from']) & (~df2['wired-to'])][['test', 'success']]
 
     ulax.set_title("wired -> wired")
     ulax.set_ylim((0, 1))
-    urax.set_title("wired -> wireless")
+    urax.set_title("wireless -> wired")
     urax.set_ylim((0, 1))
-    llax.set_title("wireless -> wired")
+    llax.set_title("wired -> wireless")
     llax.set_ylim((0, 1))
     lrax.set_title("wireless -> wireless")
     lrax.set_ylim((0, 1))
