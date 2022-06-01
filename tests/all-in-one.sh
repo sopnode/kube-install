@@ -57,10 +57,10 @@ function join() {
     ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; fit-label-nodes"
 }
 
-function testpod() { -map testpod; }
+function testpods() { -map testpod; }
 
-function trashpod() {
-    ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; trash-tespods"
+function trashpods() {
+    ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; trash-testpods"
 }
 
 function tests() {
@@ -85,8 +85,8 @@ function -steps() {
     done
 }
 
-function full-monty()   { -steps check-config load-image refresh leave create join testpod; }
-function setup()        { -steps check-config            refresh leave create join testpod; }
+function full-monty()   { -steps check-config load-image refresh leave create join testpods; }
+function setup()        { -steps check-config            refresh leave create join testpods; }
 function run()          { -steps check-config tests gather ; }
 
 function usage() {

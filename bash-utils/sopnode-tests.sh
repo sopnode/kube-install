@@ -116,6 +116,12 @@ function local-pod() {
     echo fping-$key-pod
 }
 
+function enter-local-pod() {
+    local pod=$(local-pod)
+    [[ -z "$pod" ]] && { echo could not locate local pod; return 1; }
+    kubectl exec -ti $pod -- /bin/bash
+}
+
 # find all the pod IPs in the namespace
 #function default-namespace-pod-ips() {
 #    kubectl get pod -o yaml | \
