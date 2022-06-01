@@ -40,10 +40,9 @@ there are 2 kinds of tests:
 
 and namely:
 
+* A. `check-api` checks the ability that a pod has to join the kubernetes API on 10.96.0.1
 * A. `check-dns` will check if names can be resolved **from the testpod**; the names to resolve are `kubernetes` `r2lab.inria.fr` and `github.com`
 * A. `check-http` will check for outside connectivity **from a testpod**, by opening a tcp connection to some outside hosts; this targets `r2lab.inria.fr` `github.com` and `140.82.121.4` so obviously, if check-dns fails, we can get a maximum of 2/3 on this one
-* A. `check-landmark` uses ping to check connectivity **from the testpod** to the fixed IP addresses `10.96.0.1` (aka kubernetes) and `10.96.0.10` (the IP for the DNS service)  
-  **NOTE: this is failing and that may just as well be the expected behaviour...**
 
 *** 
 
@@ -57,9 +56,9 @@ and namely:
 
 +++
 
-* about `check-landmark`
-  * apparently the DNS IP endpoint on `10.96.0.10` is configured to NOT answer ICMP; if tested on the wired side only, a ping to `10.96.0.10` from the testpod will fail, BUT that IP address does solve hostnamed when doing e.g. `host github.com 10.96.0.10`
-  * not sure how 
+* apparently the DNS IP endpoint on `10.96.0.10` is configured to NOT answer ICMP; if tested on the wired side only, a ping to `10.96.0.10` from the testpod will fail, BUT that IP address does solve hostnames when doing e.g. `host github.com 10.96.0.10`
+* same for the `10.96.0.1`; that is why `check-api` checks for that properly using curl, but that was not the case at the beginning
+ 
 
 +++
 

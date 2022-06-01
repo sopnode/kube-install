@@ -137,32 +137,23 @@ function get-pod-ip() {
 # that are fixed and should always be reachable
 # using curl and host respectively
 
-function -check-landmarks() {
+function -check-api() {
     local source="$1"; shift
     local dests="$@"
-    [[ -z "$dests" ]] && dests="10.96.0.1 10.96.0.10"
+    [[ -z "$dests" ]] && dests="10.96.0.1"
     local ok="true"
-    local dest
+    local dest="10.96.0.1"
 
     # using curl on the API endpoint
-    dest="10.96.0.1"
-    local P="====== check-landmark: FROM $source to $dest (curl) -> "
+    local P="====== check-api: FROM $source to $dest (curl) -> "
     command="curl -k --connect-timeout 1 https://$dest:443/"
     exec-in-container-from-podname $source $command >& /dev/null
     [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
-    -log-line check-landmark $source $dest $success
-
-    # using host on the DNS endpoint
-    dest="10.96.0.10"
-    local P="====== check-landmark: FROM $source to $dest (host) -> "
-    command="host -W 1 github.com $dest"
-    exec-in-container-from-podname $source $command >& /dev/null
-    [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
-    -log-line check-landmark $source $dest $success
+    -log-line check-api $source $dest $success
 
 }
 # default
-function check-landmarks() { -check-landmarks $(local-pod) "$@"; }
+function check-api() { -check-api $(local-pod) "$@"; }
 
 
 # run ping from one pod to all local pods in the namespace
@@ -200,7 +191,7 @@ function -check-dnss() {
     local name
     for name in $names; do
         local P="====== check-dns: FROM $source resolving $name -> "
-        command="host $name"
+        command="host -W 1 $name"
         local success=OK
         exec-in-container-from-podname $source $command
         [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
@@ -278,7 +269,7 @@ function check-execs() {
 }
 
 function check-all() {
-    check-landmarks &
+    check-api &
     check-pings &
     check-dnss &
     check-https &
