@@ -4,6 +4,6 @@ metadata:
   name: r2lab-ippool
 spec:
   cidr: 10.245.0.0/16
-  vxlanMode: CrossSubnet
+  vxlanMode: Always
   natOutgoing: true
   nodeSelector: r2lab/node == "true"
