@@ -83,6 +83,7 @@ function set-fitnode() {
     local arg="$1"; shift
     arg=$(sed -e s/fit// <<< $arg)
     export FITNODE=fit$(printf "%02d" $arg)
+    echo FITNODE=$FITNODE
 }
 function check-fitnode() {
     [[ -z "$FITNODE" ]] && { echo "use command e.g. 'set-fitnode 19' to define your FIT node"; return 1; }
@@ -98,6 +99,13 @@ function start-testpods() {
     local node
     for node in $nodes; do
         ssh root@$node kube-install.sh testpod
+    done
+}
+function trash-testpods() {
+    local pods=$(kubectl get pod -o yaml | yq ".items[].metadata.name")
+    local pod
+    for pod in $pods; do
+        kubectl delete pod $pod
     done
 }
 

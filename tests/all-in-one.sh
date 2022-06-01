@@ -3,8 +3,8 @@
 MASTER=sopnode-w2.inria.fr
 WORKER=sopnode-w3.inria.fr
 FITNODE=fit01
-RUNS=1
-PERIOD=3
+RUNS=10
+PERIOD=2
 
 M=root@$MASTER
 W=root@$WORKER
@@ -59,13 +59,17 @@ function join() {
 
 function testpod() { -map testpod; }
 
+function trashpod() {
+    ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; trash-tespods"
+}
+
 function tests() {
     for h in $M $W; do
         echo "running $RUNS tests every $PERIOD s on $h"
-        ssh $h "source /usr/share/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FIT; run-all $RUNS $PERIOD"
+        ssh $h "source /usr/share/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
     done
     echo "running $RUNS tests every $PERIOD s on $F"
-    ssh $F "source /root/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FIT; run-all $RUNS $PERIOD"
+    ssh $F "source /root/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
 }
 
 function gather() {
@@ -81,8 +85,9 @@ function -steps() {
     done
 }
 
-function full-monty()   { -steps load-image refresh leave create join testpod; }
-function rerun()        { -steps            refresh leave create join testpod; }
+function full-monty()   { -steps check-config load-image refresh leave create join testpod; }
+function setup()        { -steps check-config            refresh leave create join testpod; }
+function run()          { -steps check-config tests gather ; }
 
 function usage() {
     echo "Usage: $0 subcommand1 .. subcommandn"
