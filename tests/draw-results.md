@@ -58,7 +58,7 @@ and namely:
 
 * apparently the DNS IP endpoint on `10.96.0.10` is configured to NOT answer ICMP; if tested on the wired side only, a ping to `10.96.0.10` from the testpod will fail, BUT that IP address does solve hostnames when doing e.g. `host github.com 10.96.0.10`
 * same for the `10.96.0.1`; that is why `check-api` checks for that properly using curl, but that was not the case at the beginning
- 
+* note that `check-http` has 3 destinations, 2 of which are fqdn's; so when `check-dns` fails, the best that `check-http` can achieve is 1/3
 
 +++
 
@@ -76,6 +76,12 @@ we show:
 import postprocess
 ```
 
+```{code-cell} ipython3
+# figures size
+from IPython.core.pylabtools import figsize
+figsize(10, 12)
+```
+
 ## past results
 
 ```{code-cell} ipython3
@@ -89,8 +95,8 @@ import postprocess
 ```
 
 ```{code-cell} ipython3
-df1, df2, *_ = postprocess.load("SUMMARY-05-31-09-49-39-mask18.csv")
-postprocess.show_all(df1, df2)
+#df1, df2, *_ = postprocess.load("SUMMARY-06-01-09-23-39-nobgp-mask16.csv")
+#postprocess.show_all(df1, df2)
 ```
 
 ## latest results
@@ -106,11 +112,14 @@ postprocess.show_all(df1, df2)
 ## digging...
 
 ```{code-cell} ipython3
-# for instance, extracting the 'check-http' bar from the upper-left diagram
-# would mean to do
-extract = df1[(~df1['wired-from']) & (df1['test']=='check-landmark')]
+# for example:
+
+# the upper right 'check-api' bar
+extract = df1[(~df1['wired-from']) & (df1['test']=='check-api')]
+
 # how many entries
 print(f"{extract.shape[0]=}")
+
 extract.head()
 ```
 

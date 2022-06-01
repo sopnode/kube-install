@@ -31,7 +31,7 @@ def load(filename):
     # split into 2
     # check-dns and check-http are really checking against the outside world
     # so it's not something that can be classified into cross or straight
-    single_tests = df.test.isin(("check-landmark", "check-dns", "check-http"))
+    single_tests = df.test.isin(("check-api", "check-dns", "check-http"))
     df1 = df[single_tests].copy()
     df2 = df[~single_tests].copy()
 
@@ -90,7 +90,7 @@ def draw_df2(df2, ulax, urax, llax, lrax):
 
 def show_all(df1, df2):
 
-    fig, ((l1, r1), (l2, r2), (l3, r3)) = plt.subplots(3, 2, figsize=(10, 12))
+    fig, ((l1, r1), (l2, r2), (l3, r3)) = plt.subplots(3, 2)
 
     draw_df1(df1, l1, r1)
     draw_df2(df2, l2, r2, l3, r3)
