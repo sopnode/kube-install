@@ -482,7 +482,7 @@ function cluster-networking-calico() {
     yq --inplace \
       'with(select(document_index==0).spec.calicoNetwork;
          .bgp="Disabled"
-         | .ipPools[0].cidr="10.244.0.0/18"
+         | .ipPools[0].cidr="10.244.0.0/16"
          | .ipPools[0].encapsulation="VXLAN"
          | .ipPools[0].nodeSelector="r2lab/node != \"true\""
          )' \

@@ -3,7 +3,7 @@ kind: IPPool
 metadata:
   name: r2lab-ippool
 spec:
-  cidr: 10.245.0.0/18
+  cidr: 10.245.0.0/16
   vxlanMode: CrossSubnet
   natOutgoing: true
   nodeSelector: r2lab/node == "true"
