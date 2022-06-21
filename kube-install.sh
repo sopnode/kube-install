@@ -706,6 +706,11 @@ function pwd() {
     echo $MYDIR
 }
 
+function self-update() {
+    git -C $MYDIR pull
+}
+
+
 function testpod() {
     cd $MYDIR/kiada
     ./testpod.sh

@@ -1,18 +1,18 @@
 #!/bin/bash
 
-MASTER=sopnode-w2.inria.fr
+LEADER=sopnode-w2.inria.fr
 WORKER=sopnode-w3.inria.fr
 FITNODE=fit01
 RUNS=3
 PERIOD=2
 
-M=root@$MASTER
+M=root@$LEADER
 W=root@$WORKER
 F=root@$FITNODE
 S=inria_sopnode
 
 function check-config() {
-    echo MASTER=$MASTER
+    echo LEADER=$LEADER
     echo WORKER=$WORKER
     echo FITNODE=$FITNODE
     echo RUNS=$RUNS
@@ -51,9 +51,16 @@ function create() {
 }
 
 function join() {
-    for h in $W $F; do
-        ssh $h kube-install.sh join-cluster r2lab@$MASTER
+    for h in $W; do
+        ssh $h "kube-install.sh join-cluster r2lab@$LEADER"
     done
+    for h in $F; do
+        ssh $h "source /root/kube-install/bash-utils/loader.sh; join-island-network; test-island"
+        local island_ip=$(ssh $h "source /root/kube-install/bash-utils/loader.sh; island-local-ip")
+
+        ssh $h "export IP=${island_ip}; kube-install.sh join-cluster r2lab@$LEADER"
+    done
+
     ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; fit-label-nodes"
 }
 
@@ -90,7 +97,7 @@ function setup()        { -steps check-config            refresh leave create jo
 function run()          { -steps check-config tests gather ; }
 
 function usage() {
-    echo "Usage: $0 subcommand1 .. subcommandn"
+    echo "Usage: $0 subcommand_1 .. subcommand_n"
     echo "subcommand 'full-monty to redo everything including rhubarbe-load'"
     echo "subcommand 'rerun to redo everything except rhubarbe-load'"
     exit 1
