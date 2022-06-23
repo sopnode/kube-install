@@ -481,11 +481,17 @@ function cluster-networking-calico() {
     # change only in one location and not in the API server section
     yq --inplace \
       'with(select(document_index==0).spec.calicoNetwork;
-         .bgp="Disabled"
-         | .ipPools[0].cidr="10.244.0.0/16"
-         | .ipPools[0].encapsulation="VXLAN"
-         | .ipPools[0].nodeSelector="r2lab/node != \"true\""
-         )' \
+        .bgp="Disabled"
+        | .ipPools[0].cidr="10.244.0.0/16"
+        | .ipPools[0].encapsulation="VXLAN"
+        | .ipPools[0].nodeSelector="r2lab/node != \"true\""
+        )' \
+      $calico_settings
+    # this is so that FIT nodes, typically, use their island IP instead of their NAT'ed one
+    yq --inplace \
+      'with(select(document_index==0).spec.calicoNetwork;
+        .nodeAddressAutodetectionV4.kubernetes="NodeInternalIP"
+        )' \
       $calico_settings
     kubectl create -f $calico_settings
 }
