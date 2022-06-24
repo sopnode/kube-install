@@ -92,8 +92,9 @@ function run()          { -steps check-config tests gather ; }
 
 function usage() {
     echo "Usage: $0 subcommand_1 .. subcommand_n"
-    echo "subcommand 'full-monty to redo everything including rhubarbe-load'"
-    echo "subcommand 'rerun to redo everything except rhubarbe-load'"
+    echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
+    echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
+    echo "subcommand 'run' to run the tests"
     exit 1
 }
 
