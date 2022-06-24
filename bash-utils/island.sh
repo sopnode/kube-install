@@ -105,3 +105,7 @@ function island-test() {
     p1v 138.96.245.52 sopnode-w2
     p1v 138.96.245.53 sopnode-w3
 }
+
+for subcommand in "$@"; do
+    $subcommand
+done
