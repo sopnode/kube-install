@@ -21,7 +21,7 @@ function calicoctl() {
 function get-pools() { kubectl calico --allow-version-mismatch get ippool "$@"; }
 function watch-nodes() { watch kubectl get node "$@"; }
 function watch-nodes-and-pools() {
-    watch "echo ==== NODES; kubectl get nodes $@; echo ==== POOLS; kubectl-calico --allow-version-mismatch get ippools $@"
+    watch "echo ==== NODES; kubectl get nodes -o wide $@; echo ==== POOLS; kubectl-calico --allow-version-mismatch get ippools $@"
 }
 function watch-2() { watch-nodes-and-pools; }
 
