@@ -333,7 +333,7 @@ function -run-n-times() {
 function run-all() {
     local how_many="$1"; shift
     local period="$1"; shift
-    [[ -z "$how_many" ]] && how_many=30
+    [[ -z "$how_many" ]] && how_many=5
     [[ -z "$period" ]] && period=5
     -run-n-times check-all $how_many $period
 }

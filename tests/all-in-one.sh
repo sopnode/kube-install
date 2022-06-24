@@ -3,7 +3,7 @@
 MASTER=sopnode-w2.inria.fr
 WORKER=sopnode-w3.inria.fr
 FITNODE=fit01
-RUNS=10
+RUNS=3
 PERIOD=2
 
 M=root@$MASTER
