@@ -487,12 +487,6 @@ function cluster-networking-calico() {
         | .ipPools[0].nodeSelector="r2lab/node != \"true\""
         )' \
       $calico_settings
-    # this is so that FIT nodes, typically, use their island IP instead of their NAT'ed one
-    yq --inplace \
-      'with(select(document_index==0).spec.calicoNetwork;
-        .nodeAddressAutodetectionV4.kubernetes="NodeInternalIP"
-        )' \
-      $calico_settings
     kubectl create -f $calico_settings
 }
 

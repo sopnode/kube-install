@@ -10,25 +10,15 @@
   - [proposal: the island](#proposal-the-island)
   - [implementation](#implementation)
     - [addressing](#addressing)
-      - [sopnode:](#sopnode)
-      - [fit:](#fit)
-      - [tunnel:](#tunnel)
     - [configuration](#configuration)
-      - [faraday](#faraday)
-      - [sopnode-l1](#sopnode-l1)
-      - [fitxx](#fitxx)
-      - [sopnode-wxx](#sopnode-wxx)
     - [making all this persistent](#making-all-this-persistent)
       - [persistent nodes](#persistent-nodes)
       - [fit nodes](#fit-nodes)
     - [DNS](#dns)
     - [testing connectivity](#testing-connectivity)
       - [common](#common)
-      - [faraday](#faraday-1)
+      - [faraday](#faraday)
       - [l1](#l1)
-    - [kube-install join](#kube-install-join)
-      - [sopnode-wxx](#sopnode-wxx-1)
-      - [fitxx](#fitxx-1)
 
 ## problem statement
 
@@ -81,98 +71,34 @@ which is to create what I call **an island***, i.e. a ***complete connectivity**
 * on e the one hand the `sopnode-*` hosts
 * and on the other faraday, and its attached nodes
 
-the following archtecture
+Thanks to the following archtecture
+
+**note** in here the node `sopnode-l1` **is fixed**; its peering configuration with faraday is static; even when running a dev k8s cluster with, say, `sopnode-w2` as the master, it is **always `sopnode-l1`** that runs the tunnel.
+
 
 ![](island-arch.svg)
 
 ## implementation
 
+in a first attempt we had deployed a second IP address on each side; it was cumbersome and not working, so let's keep it as simple as it gets:
+
 ### addressing
 
 | piece | address range |
 |-|-|
-| sopnode side | 10.3.2.x/24 - here x is the worker number; l1 gets .50
-| fit/r2lab side | 10.3.3.x/24 - here x is the fit number
+| sopnode side | their usual public IP
+| fit/r2lab side | their usual NAT'ed IP
 | tunnel | 10.3.1.x/24 - here x is either 1 or 2
 
-#### sopnode:
-    10.3.2.50        sopnode-l1-priv
-    10.3.2.1         sopnode-w1-priv
-    10.3.2.2         sopnode-w2-priv
-    10.3.2.3         sopnode-w3-priv
-
-#### fit:
-    10.3.3.100     faraday
-    10.3.3.1       fit01-priv
-    10.3.3.2       fit02-priv
-    10.3.3.3       fit03-priv
-    10.3.3.4       fit04-priv
-
-#### tunnel:
     10.3.1.2      sopnode-tunnel
     10.3.1.3      faraday-tunnel
 
 ### configuration
 
-#### faraday
+the code for joining is in `island.sh`  
+mostly fit nodes will need to call `join-island-network` before joining the cluster  
+plan is to have the permanent/wired boxes (faraday+sopnode*) eventually do that at boot-time
 
-* tunnel
-  ```bash
-  ip link add r2lab-sopnode type ipip local 138.96.16.97 remote 138.96.245.50
-  ip addr add 10.3.1.3/24 dev r2lab-sopnode
-  ip link set dev r2lab-sopnode up
-  ```
-
-* private network
-  ```bash
-  ip addr add 10.3.3.100/24 dev control
-  ```
-
-* routing
-  ``` bash
-  ip route add 10.3.2.0/24 dev r2lab-sopnode
-  ```
-
-#### sopnode-l1
-
-* tunnel
-  ```bash
-  ip link add r2lab-sopnode type ipip local 138.96.245.50 remote 138.96.16.97
-  ip addr add 10.3.1.2/24 dev r2lab-sopnode
-  ip link set dev r2lab-sopnode up
-  ```
-
-* private network
-  ```bash
-  ip addr add 10.3.2.50/24 dev eth0
-  ```
-
-* routing
-  ``` bash
-  ip route add 10.3.3.0/24 dev r2lab-sopnode
-  ```
-
-#### fitxx
-
-* private network
-  ```bash
-  # e.g. on fit01
-  xx=1
-  ip addr add 10.3.3.${xx}/24 dev control
-  ip route add 10.3.1.0/24 dev control via 10.3.3.100
-  ip route add 10.3.2.0/24 dev control via 10.3.3.100
-  ```
-
-#### sopnode-wxx
-
-* private-network
-  ```bash
-  # e.g. on w2
-  xx=2
-  ip addr add 10.3.2.${xx}/24 dev eth0
-  ip route add 10.3.1.0/24 dev eth0 via 10.3.2.50
-  ip route add 10.3.3.0/24 dev eth0 via 10.3.2.50
-  ```
 
 ### making all this persistent
 
@@ -203,6 +129,8 @@ creating some DNS entries might make our life (a lot) easier;
 
 #### common
 
+`
+
 #### faraday
 
 ```bash
@@ -213,26 +141,4 @@ test-island; p1v 10.3.1.2 TUNNEL
 
 ```bash
 test-island; p1v 10.3.1.3 TUNNEL
-```
-
-### kube-install join
-
-#### sopnode-wxx
-
-```bash
-# joining the cluster on l1
-ki join-cluster r2lab@10.3.2.50
-
-# joining the cluster on w2
-ki join-cluster r2lab@10.3.2.2
-```
-
-#### fitxx
-
-**IMPORTANT** we need to get calico to use the `10.3.3.x` address; otherwise it will still use `192.168.3.x`
-
-```bash
-xx=1
-export IP=10.3.3.${xx}
-# then same
 ```

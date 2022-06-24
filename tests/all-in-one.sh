@@ -51,14 +51,8 @@ function create() {
 }
 
 function join() {
-    for h in $W; do
+    for h in $W $F; do
         ssh $h "kube-install.sh join-cluster r2lab@$LEADER"
-    done
-    for h in $F; do
-        ssh $h "source /root/kube-install/bash-utils/loader.sh; join-island-network; test-island"
-        local island_ip=$(ssh $h "source /root/kube-install/bash-utils/loader.sh; island-local-ip")
-
-        ssh $h "export IP=${island_ip}; kube-install.sh join-cluster r2lab@$LEADER"
     done
 
     ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; fit-label-nodes"

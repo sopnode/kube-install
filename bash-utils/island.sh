@@ -1,40 +1,86 @@
+# helpers
+
 function p1() {
       local box="$1"; shift
       ping -c1 -w1 $box >& /dev/null
 }
+
 function p1v() {
       local box="$1"; shift
       local message="$1"; shift
       p1 $box && echo "$message ($box) OK" || echo "$message ($box) KO"
 }
 
-
-####
-# how to join the ISLAND network
-ISLAND_FIT=10.3.3
-ISLAND_SOPNODE=10.3.2
-ISLAND_TUNNEL=10.3.1
-
-function join-island-network() {
-    local hostname=$(hostname -s)
-    # with zero
-    local zid=$(sed -e s,fit,, <<< $hostname)
-    # without zero
-    local id=$(printf %d $zid)
-    local island_address=${ISLAND_FIT}.${id}
-    if ip addr sh dev control | fgrep -q $island_address; then
-        true
-        # echo already joined the ISLAND network on $island_address
-    else
-        ip addr add ${island_address}/24 dev control
-        ip route add ${ISLAND_TUNNEL}.0/24 dev control via 10.3.3.100
-        ip route add ${ISLAND_SOPNODE}.0/24 dev control via 10.3.3.100
-    fi
+function add-route-if-needed() {
+    local dest="$1"; shift
+    # do nothing if already present
+    ip route | grep -q ${dest} >& /dev/null && return 0
+    ip route add $dest "$@"
 }
 
 
+####
+
+function join-island-network() {
+    case $(hostname) in
+        faraday*)
+            island-faraday;;
+        sopnode-l1*)
+            island-l1;;
+        fit*)
+            island-fit;;
+        sopnode*)
+            island-sopnode;;
+    esac
+}
+
+function island-faraday() {
+    # ip/ip tunnel interface
+    ip link add r2lab-sopnode type ipip local 138.96.16.97 remote 138.96.245.50
+    ip addr add 10.3.1.3/24 dev r2lab-sopnode
+    ip link set dev r2lab-sopnode up
+    # routing
+    # use the ipip tunnel for all nodes on the sopnode side
+    ip route add 138.96.245.0/24 dev r2lab-sopnode
+    # except for sopnode-l1 that needs to go through the default route
+    # because otherwise the tunnel won't work !
+    ip route add 138.96.245.50 via 138.96.16.110 dev internet
+}
+
+function island-l1() {
+    # ip/ip tunnel interface
+    ip link add r2lab-sopnode type ipip local 138.96.245.50 remote 138.96.16.97
+    ip addr add 10.3.1.2/24 dev r2lab-sopnode
+    ip link set dev r2lab-sopnode up
+
+    # routing
+    ip route add 192.168.3.0/24 dev r2lab-sopnode
+    # same on this side
+    ip route add 138.96.16.97 via 138.96.245.250 dev eth0
+
+}
+
+function island-fit() {
+    # the FIT side
+    add-route-if-needed 138.96.245.0/24 dev control via 192.168.3.100
+    add-route-if-needed 10.3.1.0/24 dev control via 192.168.3.100
+}
+
+function island-sopnode() {
+    # the SOPNODE side
+    # the other side network
+    add-route-if-needed 192.168.3.0/24 dev eth0 via 138.96.245.50
+    # the tunnel
+    add-route-if-needed 10.3.1.0/24 dev eth0 via 138.96.245.50
+    # faraday, otherwise it goes through the usual gateway
+    add-route-if-needed 138.96.16.97/32 dev eth0 via 138.96.245.50
+}
+
+
+
 ### test connectivity to the main pieces of the island
-function test-island() {
+function island-test() {
+    # provide the fit number if from sopnode
     local id="$1"; shift
     if [[ -z "$id" ]]; then
         local hostname=$(hostname -s)
@@ -49,21 +95,13 @@ function test-island() {
     id=$(sed -e s/fit// <<< $id)
     id=$(printf %d $id)
     local zid=$(printf %02d $id)
-    p1v 10.3.3.$id "fit${zid}"
-    p1v 10.3.3.100 faraday
-    p1v 10.3.2.50 sopnode-l1
-    p1v 10.3.2.1 sopnode-w1
-    p1v 10.3.2.2 sopnode-w2
-    p1v 10.3.2.3 sopnode-w3
-}
-
-
-### compute local island IP
-function island-local-ip() {
-    local try1=$(ip addr sh dev control 2> /dev/null | grep $ISLAND_FIT | sed -e "s,/, ," | awk '{print $2}')
-    [[ -n "$try1" ]] && { echo $try1; return 0; }
-    local try2=$(ip addr sh dev eth0 2> /dev/null | grep $ISLAND_SOPNODE | sed -e "s,/, ," | awk '{print $2}')
-    [[ -n "$try2" ]] && { echo $try2; return 0; }
-    echo try1=">${try1}<"
-    echo try2=">${try2}<"
+    p1v 192.168.3.$id "fit${zid}"
+    p1v 138.96.16.97 faraday-pub
+    p1v 192.168.3.100 faraday-priv
+#    p1v 10.3.1.3 faraday-tun
+    p1v 138.96.245.50 sopnode-l1-pub
+#    p1v 10.3.1.2 sopnode-l1-tun
+    p1v 138.96.245.51 sopnode-w1
+    p1v 138.96.245.52 sopnode-w2
+    p1v 138.96.245.53 sopnode-w3
 }
