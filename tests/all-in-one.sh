@@ -70,7 +70,7 @@ function tests() {
         ssh $h "source /usr/share/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
     done
     echo "running $RUNS tests every $PERIOD s on $F"
-    ssh $F "source /root/kube-install/bash-utils/loader.sh; clear-logs; join-island-network; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
+    ssh $F "source /root/kube-install/bash-utils/loader.sh; clear-logs; join-tunnel; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
 }
 
 function gather() {

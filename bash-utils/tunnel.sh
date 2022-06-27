@@ -33,23 +33,23 @@ function p1v() {
 
 
 
-function -island-network() {
+function -tunnel() {
     local verb="$1"; shift
     case $(hostname) in
         faraday*)
-            ${verb}-island-faraday;;
+            ${verb}-tunnel-faraday;;
         sopnode-l1*)
-            ${verb}-island-l1;;
+            ${verb}-tunnel-l1;;
         fit*)
-            ${verb}-island-fit;;
+            ${verb}-tunnel-fit;;
         sopnode*)
-            ${verb}-island-sopnode;;
+            ${verb}-tunnel-sopnode;;
     esac
 }
-function join-island-network() { -island-network join; }
-function leave-island-network() { -island-network leave; }
+function join-tunnel() { -tunnel join; }
+function leave-tunnel() { -tunnel leave; }
 
-function join-island-faraday() {
+function join-tunnel-faraday() {
     # ip/ip tunnel interface
     ip link add r2lab-sopnode type ipip local 138.96.16.97 remote 138.96.245.50
     ip addr add 10.3.1.3/24 dev r2lab-sopnode
@@ -62,12 +62,12 @@ function join-island-faraday() {
     # because otherwise the tunnel won't work !
     ip route add 138.96.245.50/32 via 138.96.16.110 dev internet
 }
-function leave-island-faraday() {
+function leave-tunnel-faraday() {
     ip route del 138.96.245.50/32 via 138.96.16.110 dev internet
     ip link del dev r2lab-sopnode download
 }
 
-function join-island-l1() {
+function join-tunnel-l1() {
     # ip/ip tunnel interface
     ip link add r2lab-sopnode type ipip local 138.96.245.50 remote 138.96.16.97
     ip addr add 10.3.1.2/24 dev r2lab-sopnode
@@ -78,22 +78,22 @@ function join-island-l1() {
     # same on this side
     ip route add 138.96.16.97 via 138.96.245.250 dev eth0
 }
-function leave-island-l1() {
+function leave-tunnel-l1() {
     ip route del 138.96.16.97 via 138.96.245.250 dev eth0
     ip link del dev r2lab-sopnode
 }
 
-function join-island-fit() {
+function join-tunnel-fit() {
     # the FIT side
     ip route add 138.96.245.0/24 dev control via 192.168.3.100
     ip route add 10.3.1.0/24 dev control via 192.168.3.100
 }
-function leave-island-fit() {
+function leave-tunnel-fit() {
     ip route del 138.96.245.0/24 dev control via 192.168.3.100
     ip route del 10.3.1.0/24 dev control via 192.168.3.100
 }
 
-function join-island-sopnode() {
+function join-tunnel-sopnode() {
     # the SOPNODE side
     # the other side network
     ip route add 192.168.3.0/24 dev eth0 via 138.96.245.50
@@ -102,7 +102,7 @@ function join-island-sopnode() {
     # faraday, otherwise it goes through the usual gateway
     ip route add 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
-function leave-island-sopnode() {
+function leave-tunnel-sopnode() {
     ip route del 192.168.3.0/24 dev eth0 via 138.96.245.50
     ip route del 10.3.1.0/24 dev eth0 via 138.96.245.50
     ip route del 138.96.16.97/32 dev eth0 via 138.96.245.50
@@ -110,8 +110,8 @@ function leave-island-sopnode() {
 
 
 
-### test connectivity to the main pieces of the island
-function island-test() {
+### test connectivity to the main pieces of the tunnel
+function test-tunnel() {
     # provide the fit number if from sopnode
     local id="$1"; shift
     if [[ -z "$id" ]]; then
