@@ -12,13 +12,24 @@ function p1v() {
 }
 
 
-####
-function add-route-if-needed() {
-    local dest="$1"; shift
-    # do nothing if already present
-    ip route | grep -q ${dest} >& /dev/null && return 0
-    ip route add $dest "$@"
-}
+# #### these work, but are not actually necessary
+# function add-route-if-needed() {
+#     local dest="$1"; shift
+#     # /32 does not show up in the output of ip route
+#     dest=$(sed -e 's,/32$,,' <<< $dest)
+#     # do nothing if already present
+#     ip route 2> /dev/null | grep -q ${dest} >& /dev/null && return 0
+#     ip route add $dest "$@"
+# }
+
+# function del-route-if-needed() {
+#     local dest="$1"; shift
+#     # /32 does not show up in the output of ip route
+#     dest=$(sed -e 's,/32$,,' <<< $dest)
+#     # do nothing if already present
+#     ip route 2> /dev/null | grep -q ${dest} >& /dev/null || return 0
+#     ip route del $dest "$@"
+# }
 
 
 
@@ -49,10 +60,10 @@ function join-island-faraday() {
     ip route add 138.96.245.0/24 dev r2lab-sopnode
     # except for sopnode-l1 that needs to go through the default route
     # because otherwise the tunnel won't work !
-    ip route add 138.96.245.50 via 138.96.16.110 dev internet
+    ip route add 138.96.245.50/32 via 138.96.16.110 dev internet
 }
 function leave-island-faraday() {
-    ip route add 138.96.245.50 via 138.96.16.110 dev internet
+    ip route del 138.96.245.50/32 via 138.96.16.110 dev internet
     ip link del dev r2lab-sopnode download
 }
 
@@ -74,8 +85,8 @@ function leave-island-l1() {
 
 function join-island-fit() {
     # the FIT side
-    add-route-if-needed 138.96.245.0/24 dev control via 192.168.3.100
-    add-route-if-needed 10.3.1.0/24 dev control via 192.168.3.100
+    ip route add 138.96.245.0/24 dev control via 192.168.3.100
+    ip route add 10.3.1.0/24 dev control via 192.168.3.100
 }
 function leave-island-fit() {
     ip route del 138.96.245.0/24 dev control via 192.168.3.100
@@ -85,11 +96,11 @@ function leave-island-fit() {
 function join-island-sopnode() {
     # the SOPNODE side
     # the other side network
-    add-route-if-needed 192.168.3.0/24 dev eth0 via 138.96.245.50
+    ip route add 192.168.3.0/24 dev eth0 via 138.96.245.50
     # the tunnel
-    add-route-if-needed 10.3.1.0/24 dev eth0 via 138.96.245.50
+    ip route add 10.3.1.0/24 dev eth0 via 138.96.245.50
     # faraday, otherwise it goes through the usual gateway
-    add-route-if-needed 138.96.16.97/32 dev eth0 via 138.96.245.50
+    ip route add 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
 function leave-island-sopnode() {
     ip route del 192.168.3.0/24 dev eth0 via 138.96.245.50
