@@ -44,6 +44,8 @@ function -tunnel() {
             ${verb}-tunnel-fit;;
         sopnode*)
             ${verb}-tunnel-sopnode;;
+        *)
+            echo ${verb}-tunnel not supported on host $(hostname);;
     esac
 }
 function join-tunnel() { -tunnel join; }
@@ -139,5 +141,6 @@ function test-tunnel() {
 }
 
 for subcommand in "$@"; do
+    echo running $subcommand
     $subcommand
 done
