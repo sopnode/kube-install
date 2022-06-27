@@ -2,9 +2,11 @@
 
 LEADER=sopnode-w2.inria.fr
 WORKER=sopnode-w3.inria.fr
-FITNODE=fit01
 RUNS=3
 PERIOD=2
+# defaults set below - see set_fitnode
+FITNODE=
+F=
 
 M=root@$LEADER
 W=root@$WORKER
@@ -90,26 +92,43 @@ function full-monty()   { -steps check-config load-image refresh leave create jo
 function setup()        { -steps check-config            refresh leave create join testpods; }
 function run()          { -steps check-config tests gather ; }
 
+function set_fitnode() {
+    local fitnode="$1"; shift
+    fitnode=$(sed -e s/fit// <<< $fitnode)
+    local zid=$(printf "%02d" $fitnode)
+    FITNODE=fit${zid}
+    F=root@$FITNODE
+}
+
 function usage() {
-    echo "Usage: $0 subcommand_1 .. subcommand_n"
+    echo "Usage: $0 [options] subcommand_1 .. subcommand_n"
+    echo "Options:"
+    echo "  -f 2: use fit02 for as the fit node"
+    echo "  -r 10: repeat the test 10 times"
+    echo "  -p 3: wait for 3 seconds between each run"
     echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
     echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
     echo "subcommand 'run' to run the tests"
     exit 1
 }
 
-while getopts "f:r:p:" opt; do
-    case $opt in
-        f) FITNODE=$OPTARG;;
-        r) RUNS=$OPTARG;;
-        p) PERIOD=$OPTARG;;
-        \?) usage ;;
-    esac
-done
-shift $(($OPTIND - 1))
-[[ -z "$@" ]] && usage
+main() {
+    set_fitnode 1
+    while getopts "f:r:p:" opt; do
+        case $opt in
+            f) set_fitnode $OPTARG;;
+            r) RUNS=$OPTARG;;
+            p) PERIOD=$OPTARG;;
+            \?) usage ;;
+        esac
+    done
+    shift $(($OPTIND - 1))
+    [[ -z "$@" ]] && usage
 
 
-for subcommand in "$@"; do
-    $subcommand
-done
+    for subcommand in "$@"; do
+        $subcommand
+    done
+}
+
+main "$@"
