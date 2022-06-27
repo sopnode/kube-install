@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # helpers
 
 function p1() {
@@ -66,7 +68,7 @@ function join-tunnel-faraday() {
 }
 function leave-tunnel-faraday() {
     ip route del 138.96.245.50/32 via 138.96.16.110 dev internet
-    ip link del dev r2lab-sopnode download
+    ip link del dev r2lab-sopnode
 }
 
 function join-tunnel-l1() {
@@ -141,6 +143,5 @@ function test-tunnel() {
 }
 
 for subcommand in "$@"; do
-    echo running $subcommand
     $subcommand
 done

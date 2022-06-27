@@ -3,12 +3,12 @@ Description=sopnode-tunnel
 After=network-online.target
 Wants=network-online.target
 
-# [Service]
-# Environment="DEV=bond0" "ADDR=138.96.19.1"
-# Environment="PREFIX=28" BROADCAST="138.96.19.15"
-
+[Service]
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStart= /usr/share/kube-install/bash-utils/ join-tunnel
-ExecStop=  /usr/share/kube-install/bash-utils/ leave-tunnel
+ExecStart= /usr/share/kube-install/bash-utils/tunnel.sh join-tunnel
+ExecStop=  /usr/share/kube-install/bash-utils/tunnel.sh leave-tunnel
+
+[Install]
+WantedBy=multi-user.target
