@@ -1,17 +1,43 @@
 #!/bin/bash
 
-LEADER=sopnode-w2.inria.fr
-WORKER=sopnode-w3.inria.fr
+S=inria_sopnode
 RUNS=3
 PERIOD=2
-# defaults set below - see set_fitnode
+
+# defaults set below - see set_*
 FITNODE=
+LEADER=
+WORKER=
+# shortcuts root@ on each box
+L=
+W=
 F=
 
-M=root@$LEADER
-W=root@$WORKER
-F=root@$FITNODE
-S=inria_sopnode
+function set_leader() {
+    local leader="$1"; shift
+    leader=$(sed -e s/sopnode-// -e 's/\.inria.fr//' <<< $leader)
+    LEADER=sopnode-${leader}.inria.fr
+    L=root@$LEADER
+}
+
+function set_worker() {
+    local worker="$1"; shift
+    worker=$(sed -e s/sopnode-// -e 's/\.inria.fr//' <<< $worker)
+    WORKER=sopnode-${worker}.inria.fr
+    W=root@$WORKER
+}
+
+function set_fitnode() {
+    local fitnode="$1"; shift
+    fitnode=$(sed -e s/fit// <<< $fitnode)
+    local zid=$(printf "%02d" $fitnode)
+    FITNODE=fit${zid}
+    F=root@$FITNODE
+}
+
+set_leader w2
+set_worker w3
+set_fitnode 1
 
 function check-config() {
     echo LEADER=$LEADER
@@ -30,13 +56,13 @@ function load-image() {
 
 function -map() {
     local verb="$1"; shift
-    for h in $M $W $F; do
+    for h in $L $W $F; do
         ssh $h kube-install.sh $verb
     done
 }
 
 function refresh() {
-    for h in $M $W; do
+    for h in $L $W; do
         ssh $h "source /root/diana/bash/comp-sopnode.ish; refresh"
     done
     ssh $F git -C kube-install pull
@@ -48,8 +74,8 @@ function versions() { -map version; }
 function leave() { -map leave-cluster; }
 
 function create() {
-    ssh $M kube-install.sh create-cluster
-    ssh $M kube-install.sh networking-calico-postinstall
+    ssh $L kube-install.sh create-cluster
+    ssh $L kube-install.sh networking-calico-postinstall
 }
 
 function join() {
@@ -57,17 +83,17 @@ function join() {
         ssh $h "kube-install.sh join-cluster r2lab@$LEADER"
     done
 
-    ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; fit-label-nodes"
+    ssh $L "source /usr/share/kube-install/bash-utils/loader.sh; fit-label-nodes"
 }
 
 function testpods() { -map testpod; }
 
 function trashpods() {
-    ssh $M "source /usr/share/kube-install/bash-utils/loader.sh; trash-testpods"
+    ssh $L "source /usr/share/kube-install/bash-utils/loader.sh; trash-testpods"
 }
 
 function tests() {
-    for h in $M $W; do
+    for h in $L $W; do
         echo "running $RUNS tests every $PERIOD s on $h"
         ssh $h "source /usr/share/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
     done
@@ -92,20 +118,13 @@ function full-monty()   { -steps check-config load-image refresh leave create jo
 function setup()        { -steps check-config            refresh leave create join testpods; }
 function run()          { -steps check-config tests gather ; }
 
-function set_fitnode() {
-    local fitnode="$1"; shift
-    fitnode=$(sed -e s/fit// <<< $fitnode)
-    local zid=$(printf "%02d" $fitnode)
-    FITNODE=fit${zid}
-    F=root@$FITNODE
-}
-
 function usage() {
     echo "Usage: $0 [options] subcommand_1 .. subcommand_n"
     echo "Options:"
     echo "  -f 2: use fit02 for as the fit node"
     echo "  -r 10: repeat the test 10 times"
     echo "  -p 3: wait for 3 seconds between each run"
+    echo "  -o: (prod) use sopnode-l1 + sopnode-w1"
     echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
     echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
     echo "subcommand 'run' to run the tests"
@@ -114,11 +133,12 @@ function usage() {
 
 main() {
     set_fitnode 1
-    while getopts "f:r:p:" opt; do
+    while getopts "f:r:p:o" opt; do
         case $opt in
             f) set_fitnode $OPTARG;;
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
+            o) set_leader l1; set_worker w1;;
             \?) usage ;;
         esac
     done
