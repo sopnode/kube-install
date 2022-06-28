@@ -75,7 +75,6 @@ function leave() { -map leave-cluster; }
 
 function create() {
     ssh $L kube-install.sh create-cluster
-    ssh $L kube-install.sh networking-calico-postinstall
 }
 
 function join() {

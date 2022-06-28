@@ -44,6 +44,7 @@ function fit-deads() {
 }
 
 function fit-label-nodes() {
+    echo "fit-label-nodes is no longer required nor used by kube-install.sh"
     local nodes=$(-fit-nodes)
     [ -z "$nodes" ] && { echo "no fit node currently in the cluster"; return 1; }
     kubectl label nodes $nodes --overwrite r2lab/node=true

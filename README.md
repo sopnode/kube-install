@@ -22,15 +22,9 @@ once that connectivity is established, you can build you k8s cluster on top of
 it, with
 
 * `kube-install.sh create-cluster` on the master node
-* `kube-install.sh networking-calico-postinstall` on the master node as well
-  (for some not yet identified reason, this has to be called separately after
-  `create cluter`)
 
 * `kube-install.sh join-cluster r2lab@sopnode-l1.inria.fr` for example on a
   worker that wants to join the cluster on `sopnode-l1.inria.fr`
-
-* `fit-label-nodes` to be run on the master after you have added a fit node to
-  the cluster; this will add the `r2lab/node=true` label on all R2lab Nodes
 
 ## tear down
 
@@ -76,7 +70,3 @@ also you can do stuff like (`ki = kube-instal.sh` is defined by `ki-utils`)
 ki self-update   # to pull the latest version from github
 ki version       # to display the current version (the git hash)
 ```
-
-# notes on IPPools
-
-currently we use 2 separate IP Pools for the sopnode and the FIT* areas; this is actually not strictly necessary I believe.

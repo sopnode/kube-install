@@ -1,7 +1,9 @@
+# warning: this requires the r2lab nodes to be labeled
+# with fit-label-nodes which is otherwise no longer needed
 apiVersion: v1
 kind: Pod
 metadata:
-  name: kiada-r2lab-pod
+  name: kiada-r2lab-pod 
 spec:
   containers:
   - name: kiada-r2lab-cont

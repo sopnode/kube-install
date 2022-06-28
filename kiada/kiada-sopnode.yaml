@@ -1,3 +1,5 @@
+# warning: this requires the r2lab nodes to be labeled
+# with fit-label-nodes which is otherwise no longer needed
 apiVersion: v1
 kind: Pod
 metadata:

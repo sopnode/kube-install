@@ -14,6 +14,9 @@ for starters we play with the ability to select nodes for pods
 | `kiada-r2lab.yaml` | choosing a (any) R2lab node|
 | `kiada-sopnode.yaml` | choosing an infra node (i.e. non R2lab) |
 
+note that the 2 last ones require the use of the `fit-label-nodes` command so
+that one can differentiate between the 2 sides.
+
 # debug images
 
 the `fedora-with-ping` folder contain a recipe to rebuild a little more complete

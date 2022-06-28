@@ -456,12 +456,6 @@ function cluster-networking() {
     sleep 1
     systemctl restart crio
 
-    # run postinstall if defined
-    local postinstall=networking-${flavour}-postinstall
-    type $postinstall >& /dev/null && {
-        echo running postinstall $postinstall
-        $postinstall
-    }
 }
 
 
@@ -484,25 +478,11 @@ function cluster-networking-calico() {
         .bgp="Disabled"
         | .ipPools[0].cidr="10.244.0.0/16"
         | .ipPools[0].encapsulation="VXLAN"
-        | .ipPools[0].nodeSelector="r2lab/node != \"true\""
         )' \
       $calico_settings
     kubectl create -f $calico_settings
 }
 
-# separate our 2 worlds (plain servers and R2lab/FIT nodes) into 2 separate ip-pools
-function networking-calico-postinstall() {
-    install-calico-plugin
-    # xxx somehow this command fails when run in this shell, but succeeds from another shell...
-    local command="kubectl-calico --allow-version-mismatch create -f /etc/kubernetes/calico-r2lab-ippool.yaml"
-    echo "WARNING"
-    echo "the command to run is"
-    echo $command
-    echo "however for some reason this does not work properly from within create-cluster"
-    echo "so you might need to run the following command after create-cluster has finished"
-    echo "$COMMAND networking-calico-postinstall"
-    $command
-}
 # untested yet
 function cluster-networking-weave() {
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
@@ -593,11 +573,11 @@ $fetch"
     echo "Fetching $remoteconfig as $localconfig"
     rsync -ai $remoteconfig $localconfig
 
-    # set label for remote nodes
-    local hostname=$(hostname -s)
-    if hostname -s | grep -q fit; then
-        kubectl label nodes $hostname --overwrite r2lab/node=true
-    fi
+    # # set label for remote nodes
+    # local hostname=$(hostname -s)
+    # if hostname -s | grep -q fit; then
+    #     kubectl label nodes $hostname --overwrite r2lab/node=true
+    # fi
 
     local cni_files=$(-wait-for-cni)
 

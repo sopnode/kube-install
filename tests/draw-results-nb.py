@@ -13,8 +13,11 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
+#   language_info:
+#     name: python
+#     nbconvert_exporter: python
+#     pygments_lexer: ipython3
 # ---
-
 
 # %% [markdown]
 # # test results
@@ -93,7 +96,7 @@ import postprocess
 # ## past results
 
 # %%
-#df1, df2, *_ = postprocess.load("SUMMARY-06-24-16-50-42.csv")
+#df1, df2, *_ = postprocess.load("SUMMARY-06-28-16-20-29.csv")
 #postprocess.show_all(df1, df2)
 
 # %% [markdown]
