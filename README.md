@@ -1,9 +1,11 @@
 # creating k8s clusters on the sopnode deployment
-th
-a set of shell utilities to turn a raw fedora box into a k8s cluster
+
+this is a set of shell utilities to turn a raw fedora box into a k8s cluster
 
 see script `tests/all-in-one.sh` that illustrates how to orchestrate the
-deployhment of a complete cluster that crosses the sopnode-faraday NAT thing
+deployment of a complete cluster that crosses the sopnode-faraday NAT barrier
+
+*note* this version has support for fedora35 only.
 
 ## set up
 
@@ -14,6 +16,9 @@ in particular you will need to use
 * `join-tunnel` - particularly on FIT nodes because they are not configured to
   do this at boot-time; this will ensure smooth connectivity with the
   `sopnode-*` boxes;
+  *note*: it turns out that runnin this command on the FIT
+  nodes is not that crucial, and everything will work just fine unless you need
+  to send packets to any end of the IP/IP tunnel between sopnode and R2lab.
 
   * note that `test-tunnel` can come in handy, on any of the boxes involved
     (`fit*`, `faraday` and `sopnode-*`) to test for that connectivity
@@ -32,6 +37,16 @@ and optionnally to tear things down cleanly:
 
 * `kube-install.sh destroy-cluster` on the master
 * `kube-install.sh leave-cluster` on the workers
+
+## installation
+
+most users do not need to worry about installing, as the `kubernetes` r2lab
+image has everything in place already, as well as the sopnode wired boxes;
+however if needed, you can use the following commands to make a fresh fedora
+installation compatible with the system
+
+* `kube-install.sh prepare` : for tweaking linux globally (swap, sysctls, etc..)
+* `kube-install.sh install` : for installing the required k8s packages
 
 ## convenience
 
@@ -70,3 +85,29 @@ also you can do stuff like (`ki = kube-instal.sh` is defined by `ki-utils`)
 ki self-update   # to pull the latest version from github
 ki version       # to display the current version (the git hash)
 ```
+
+## implementation notes
+
+* because the sopnode boxes are not administered like the FIT boxes, the
+  location of the various tools can be a little awkward at times; for one thing,
+  the git repo is cloned on each participating machine, and as of now, it is located
+  * in `/root/kube-install` on the FIT nodes
+  * in `/usr/share/kube-install` on the sopnode boxes
+
+  this is because `/root/` is not readable by non-root users
+* you can use the following subcommands (running `ki-utils` has the effect of
+  defining `ki` as an alias for `kube-install.sh`)
+  * `ki version` to display the git repo current hash
+  * `ki pwd` to display the folder where the git repo is cloned
+  * `ki self-update` to git pull in that repo (remains on the same branch)
+  * `cdki` changes directory to the git repo
+* most of these bash utilities are implemented as functions, meaning that for
+  example
+  * you cannot simply do `ssh sopnode-w1.inria.fr test-tunnel`
+  * and you will neither find a file named `test-tunnel`
+
+  instead, as you can see in `all-in-one.sh`, the right way to invoke similar
+  commands is like this
+  ```bash
+  ssh sopnode-w2.inria.fr "source /usr/share/kube-install/bash-utils/loader.sh; test-tunnel"
+  ```
