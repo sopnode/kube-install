@@ -27,8 +27,8 @@ function load-config() {
     local strict="$1"; shift
 
     # default for all
-    export K8S_VERSION=1.23.6
-    export CRIO_VERSION=1.22
+    export K8S_VERSION=1.24.2
+    export CRIO_VERSION=1.24.0
     export CALICO_VERSION=3.23.1
 
     if [[ -n "$strict" ]]; then
