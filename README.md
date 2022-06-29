@@ -31,6 +31,8 @@ it, with
 * `kube-install.sh join-cluster r2lab@sopnode-l1.inria.fr` for example on a
   worker that wants to join the cluster on `sopnode-l1.inria.fr`
 
+* `kube-install.sh enable-multus` is an optional step
+
 ## tear down
 
 and optionnally to tear things down cleanly:

@@ -487,6 +487,13 @@ function cluster-networking-calico() {
     kubectl create -f $calico_settings
 }
 
+# optional
+function enable-multus() {
+#    git clone https://github.com/k8snetworkplumbingwg/multus-cni.git && cd multus-cni
+#    cat ./deployments/multus-daemonset-thick-plugin.yml | kubectl apply -f -
+    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick-plugin.yml
+}
+
 # untested yet
 function cluster-networking-weave() {
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
