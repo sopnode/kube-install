@@ -1,0 +1,1 @@
+.spec.containers[0].command += [ "--service-node-port-range=2000-36767" ]

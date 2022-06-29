@@ -373,6 +373,10 @@ function cluster-init() {
         yq eval-all --inplace \
             --from-file $MYDIR/yaml/patches/add-uds-to-apiserver.yq \
             $topatch $MYDIR/yaml/patches/add-uds-to-apiserver.yaml
+        # required for aether
+        yq eval-all --inplace \
+            --from-file $MYDIR/yaml/patches/service-node-port-range.yq \
+            $topatch $MYDIR/yaml/patches/add-uds-to-apiserver.yaml
     }
 
     function inject-konnectivity-manifest() {
