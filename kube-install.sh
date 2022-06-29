@@ -448,6 +448,8 @@ function -wait-for-cni() {
     echo $files
 }
 
+# only calico has been extensively tested in our context
+
 function cluster-networking() {
 
     local flavour=$DEFAULT_NETWORKING
@@ -462,14 +464,6 @@ function cluster-networking() {
 
 }
 
-
-# various options for the networking
-# flannel -- https://gist.github.com/rkaramandi/44c7cea91501e735ea99e356e9ae7883
-# calico  -- https://docs.projectcalico.org/getting-started/kubernetes/quickstart
-# weave
-function cluster-networking-flannel() {
-    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-}
 function cluster-networking-calico() {
     kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
     # download before patching
@@ -495,6 +489,13 @@ function enable-multus() {
 }
 
 # untested yet
+# various options for the networking
+# flannel -- https://gist.github.com/rkaramandi/44c7cea91501e735ea99e356e9ae7883
+# calico  -- https://docs.projectcalico.org/getting-started/kubernetes/quickstart
+# weave
+function cluster-networking-flannel() {
+    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+}
 function cluster-networking-weave() {
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 }
