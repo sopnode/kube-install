@@ -63,7 +63,7 @@ function -map() {
 
 function refresh() {
     for h in $L $W; do
-        ssh $h "source /root/diana/bash/comp-sopnode.ish; refresh"
+        ssh $h refresh
     done
     ssh $F git -C kube-install pull
     versions
@@ -81,23 +81,23 @@ function join() {
     for h in $W $F; do
         ssh $h "kube-install.sh join-cluster r2lab@$LEADER"
     done
-
-    ssh $L "source /usr/share/kube-install/bash-utils/loader.sh; fit-label-nodes"
 }
 
 function testpods() { -map testpod; }
 
 function trashpods() {
-    ssh $L "source /usr/share/kube-install/bash-utils/loader.sh; trash-testpods"
+    ssh $L "trash-testpods"
 }
 
 function tests() {
     for h in $L $W; do
         echo "running $RUNS tests every $PERIOD s on $h"
-        ssh $h "source /usr/share/kube-install/bash-utils/loader.sh; clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
+        ssh $h "clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
     done
     echo "running $RUNS tests every $PERIOD s on $F"
-    ssh $F "source /root/kube-install/bash-utils/loader.sh; clear-logs; join-tunnel; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
+    # join-tunnel is recommended, although not crucial
+    # it only matters if you need a route from the fit node to the ipip tunnel endpoints
+    ssh $F "clear-logs; join-tunnel; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
 }
 
 function gather() {

@@ -52,22 +52,16 @@ installation compatible with the system
 
 ## convenience
 
-on all boxes, from an interactive shell, you can type
-```bash
-ki-utils
-```
-to add most of this stuff to your shell; example
-```bash
-[inria_sopnode@faraday ~]$ ssh fit02
-Warning: Permanently added 'fit02' (ED25519) to the list of known hosts.
-inria_sopnode@fit02's password:
+**UPDATE** it is no longer needed to explicitly type `ki-utils` on either side
+(servers or nodes)of the sopnode deployment
 
+the package comes with a few convenience commands; examples
+```bash
 [inria_sopnode@faraday ~]$ ssh root@fit02
 Warning: Permanently added 'fit02' (ED25519) to the list of known hosts.
 Web console: https://fit02:9090/ or https://192.168.3.2:9090/
 
 Last login: Mon Jun 27 16:21:51 2022 from 192.168.3.100
-[root@fit02 ~]# ki-utils
 [root@fit02 ~]# test-tunnel
 using default id=02
 fit02 (192.168.3.2) OK
@@ -84,8 +78,10 @@ Connection to fit02 closed.
 
 also you can do stuff like (`ki = kube-instal.sh` is defined by `ki-utils`)
 ```bash
-ki self-update   # to pull the latest version from github
-ki version       # to display the current version (the git hash)
+ki self-update    # to pull the latest version from github
+ki version        # to display the current version (the git hash)
+ki pwd            # to display the location where the tool is installed
+cdki              # to cd in this location
 ```
 
 ## implementation notes
@@ -97,19 +93,3 @@ ki version       # to display the current version (the git hash)
   * in `/usr/share/kube-install` on the sopnode boxes
 
   this is because `/root/` is not readable by non-root users
-* you can use the following subcommands (running `ki-utils` has the effect of
-  defining `ki` as an alias for `kube-install.sh`)
-  * `ki version` to display the git repo current hash
-  * `ki pwd` to display the folder where the git repo is cloned
-  * `ki self-update` to git pull in that repo (remains on the same branch)
-  * `cdki` changes directory to the git repo
-* most of these bash utilities are implemented as functions, meaning that for
-  example
-  * you cannot simply do `ssh sopnode-w1.inria.fr test-tunnel`
-  * and you will neither find a file named `test-tunnel`
-
-  instead, as you can see in `all-in-one.sh`, the right way to invoke similar
-  commands is like this
-  ```bash
-  ssh sopnode-w2.inria.fr "source /usr/share/kube-install/bash-utils/loader.sh; test-tunnel"
-  ```
