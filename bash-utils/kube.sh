@@ -34,10 +34,14 @@ function watch-all-pods-wide() { watch-all-pods -o wide "$@"; }
 function watch-crictl() { watch crictl ps "$@"; }
 function watch-everything() { watch kubectl get all -A "$@"; }
 function watch-everything-wide() { watch-everything -o wide "$@"; }
-function watch-services-and-pods() {
+function watch-nodes-and-pods-and-services() {
+    watch "echo ==== NODES; kubectl get nodes -o wide $@; echo ==== PODS; kubectl get pod $@; echo ==== SVCS; kubectl get svc $@"
+}
+function watch-0() { watch-nodes-and-pods-and-services -A -o wide; }
+function watch-pods-and-services() {
     watch "echo ==== PODS; kubectl get pod $@; echo ==== SVCS; kubectl get svc $@"
 }
-function watch-1() { watch-services-and-pods -A -o wide; }
+function watch-1() { watch-pods-and-services -A -o wide; }
 
 
 function kube-default-namespace() {
