@@ -1,0 +1,6 @@
+K8S_CLUSTER_NAME=devel-f36
+K8S_API_ENDPOINT=sopnode-w3.inria.fr
+K8S_API_ENDPOINT_INTERNAL=sopnode-w3.inria.fr
+K8S_API_ADDVERTISE_IP_1=138.96.245.53
+
+MASTER_SSH_ADDR_1=root@sopnode-w3.inria.fr
