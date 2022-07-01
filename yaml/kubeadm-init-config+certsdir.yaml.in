@@ -34,10 +34,10 @@ apiServer:
     watch-cache-sizes: "persistentvolumeclaims#1000,persistentvolumes#1000"
     egress-selector-config-file: /etc/kubernetes/egress-selector-konnectivity.yaml
 
-controllerManager:
-  # https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/
-  extraArgs:
-    deployment-controller-sync-period: "50s"
+# controllerManager:
+#   # https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/
+#   extraArgs:
+#     deployment-controller-sync-period: "50s"
 # scheduler:
 #   # https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/
 #   extraArgs:
