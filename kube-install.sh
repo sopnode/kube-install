@@ -28,7 +28,8 @@ function load-config() {
 
     # default for all
     export K8S_VERSION=1.24.2
-    export CRIO_VERSION=1.24.0
+    # this is a dnf module version number, looks like a subversion is not helping
+    export CRIO_VERSION=1.24
     export CALICO_VERSION=3.23.1
 
     if [[ -n "$strict" ]]; then
