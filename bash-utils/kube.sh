@@ -155,3 +155,9 @@ function pod-ip() {
     local alt="$podname-pod"
     -pod-ip $podname || -pod-ip $alt
 }
+
+function crictl-id-from-name() {
+    local name="$1"; shift
+    crictl ps --name $name -o yaml | yq .containers[0].id
+}
+alias cid=crictl-id-from-name
