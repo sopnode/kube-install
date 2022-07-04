@@ -214,6 +214,8 @@ EOF
 
     dnf -y --disableexcludes=kubernetes module enable cri-o:$CRIO_VERSION
     dnf -y --disableexcludes=kubernetes install cri-o
+    # this is required in case we are upgrading
+    dnf -y update
 
     systemctl daemon-reload
     systemctl enable --now crio
