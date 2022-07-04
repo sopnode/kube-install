@@ -715,7 +715,10 @@ function pwd() {
 }
 
 function self-update() {
-    git -C $KIDIR pull
+    local kigit="git -C $KIDIR"
+    local remote_branch=$($kigit rev-parse --abbrev-ref --symbolic-full-name @{u})
+    $kigit fetch
+    $kigit reset --hard $remote_branch
 }
 
 
