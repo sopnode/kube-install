@@ -685,7 +685,7 @@ doc-kube leave-cluster "undo join-cluster"
 doc-inspect show-rpms "list relevant rpms"
 function show-rpms() {
     rpm -qa | egrep 'kube|cri-o|cri-tools'
-    dnf module list cri-o
+    #dnf module list cri-o
 }
 doc-inspect clear-rpms "uninstall relevant rpms"
 function clear-rpms() {
