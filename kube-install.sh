@@ -472,12 +472,28 @@ function cluster-networking-calico() {
     # the calico settings come with 2 sections
     # change only in one location and not in the API server section
     yq --inplace \
-      'with(select(document_index==0).spec.calicoNetwork;
-        .bgp="Disabled"
-        | .ipPools[0].cidr="10.244.0.0/16"
-        | .ipPools[0].encapsulation="VXLAN"
+        'with(select(document_index==0).spec.calicoNetwork;
+            .bgp="Disabled"
+            | .ipPools[0].cidr="10.244.0.0/16"
+            | .ipPools[0].encapsulation="VXLAN"
+            )' \
+        $calico_settings
+    # address issue with 1.24
+    # see https://github.com/projectcalico/calico/issues/6087
+    yq --inplace \
+        'with(select(document_index==0).spec;
+            .controlPlaneTolerations = [
+                {
+                    "key": "node-role.kubernetes.io/control-plane",
+                    "effect": "NoSchedule"
+                },
+                {
+                    "key": "node-role.kubernetes.io/master",
+                    "effect": "NoSchedule"
+                }
+            ]
         )' \
-      $calico_settings
+        $calico_settings
     kubectl create -f $calico_settings
 }
 
