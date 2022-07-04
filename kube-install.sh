@@ -1,17 +1,17 @@
 ########## pseudo docstrings
 COMMAND=$0
-MYDIR=$(dirname $(readlink -f $BASH_SOURCE))
+KIDIR=$(dirname $(readlink -f $BASH_SOURCE))
 
 # the way this is installed on the sopnodes is
 # (*) repo is cloned in /usr/share/kube-install
 # (*) with a symlink in /usr/local/bin/kube-install.sh
 
 # for the mac where readlink has no -f option
-[ -z "$MYDIR" ] && MYDIR=$(dirname $BASH_SOURCE)
-[ -z "$_sourced_r2labutils" ] && source ${MYDIR}/r2labutils.sh
+[ -z "$KIDIR" ] && KIDIR=$(dirname $BASH_SOURCE)
+[ -z "$_sourced_r2labutils" ] && source ${KIDIR}/r2labutils.sh
 
-readonly MYDIR
-cd $MYDIR
+readonly KIDIR
+cd $KIDIR
 
 create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
@@ -33,7 +33,7 @@ function load-config() {
 
     if [[ -n "$strict" ]]; then
         # spot the config file for that host
-        local localconfig="$MYDIR/configs/$(hostname --short)-config.sh"
+        local localconfig="$KIDIR/configs/$(hostname --short)-config.sh"
         [ -f $localconfig ] || {
             echo "local config $localconfig not found - bye"
             exit 1
@@ -232,7 +232,7 @@ doc-kube fetch-kube-images "retrieve kube core images from dockerhub or similar"
 ##################################################### run-time
 
 # master only
-ADMIN_LOG=$MYDIR/kubeadm-init.log
+ADMIN_LOG=$KIDIR/kubeadm-init.log
 
 function create-cluster() {
     cluster-init
@@ -289,7 +289,7 @@ function cluster-init() {
     # the sooner the better
     mkdir -p /etc/kubernetes/pki /etc/kubernetes/konnectivity-server
 
-    local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
+    local output_dir=$(realpath -m $KIDIR/clusters_/${K8S_CLUSTER_NAME})
     mkdir -p ${output_dir}
 
     export LOCAL_CERTS_DIR=${output_dir}/pki
@@ -307,10 +307,10 @@ function cluster-init() {
         }
 
         # cleanup any leftover
-        git -C $MYDIR clean -f yaml/
+        git -C $KIDIR clean -f yaml/
 
         # first populate our templates in-place
-        for tmpl in $MYDIR/**/*.in; do
+        for tmpl in $KIDIR/**/*.in; do
             local b=$(basename $tmpl .in)
             local d=$(dirname $tmpl)
             local o=$d/$b
@@ -319,9 +319,9 @@ function cluster-init() {
         done
 
         # install our config files
-        rsync -ai $MYDIR/yaml/*.yaml /etc/kubernetes/
-        rsync -ai $MYDIR/yaml/manifests/*.yaml /etc/kubernetes/manifests/
-        rsync -ai $MYDIR/yaml/konnectivity-server/*.yaml /etc/kubernetes/konnectivity-server/
+        rsync -ai $KIDIR/yaml/*.yaml /etc/kubernetes/
+        rsync -ai $KIDIR/yaml/manifests/*.yaml /etc/kubernetes/manifests/
+        rsync -ai $KIDIR/yaml/konnectivity-server/*.yaml /etc/kubernetes/konnectivity-server/
         # generate the version without certificatesDir
         # define for future use
         sed '/certificatesDir:/d' $kubeadm_config1 > $kubeadm_config2
@@ -349,7 +349,7 @@ function cluster-init() {
         | sed 's/^.* /sha256:/' )
 
     # the administration client certificate and related stuff
-    $MYDIR/generate-admin-client-certs.sh
+    $KIDIR/generate-admin-client-certs.sh
 
     # produced by the previous command
     set -a
@@ -371,12 +371,12 @@ function cluster-init() {
         # as of 4.25.1, yq now correctly updates the first file
         # https://github.com/mikefarah/yq/issues/1193
         yq eval-all --inplace \
-            --from-file $MYDIR/yaml/patches/add-uds-to-apiserver.yq \
-            $topatch $MYDIR/yaml/patches/add-uds-to-apiserver.yaml
+            --from-file $KIDIR/yaml/patches/add-uds-to-apiserver.yq \
+            $topatch $KIDIR/yaml/patches/add-uds-to-apiserver.yaml
         # required for aether
         yq eval-all --inplace \
-            --from-file $MYDIR/yaml/patches/service-node-port-range.yq \
-            $topatch $MYDIR/yaml/patches/add-uds-to-apiserver.yaml
+            --from-file $KIDIR/yaml/patches/service-node-port-range.yq \
+            $topatch $KIDIR/yaml/patches/add-uds-to-apiserver.yaml
     }
 
     function inject-konnectivity-manifest() {
@@ -389,7 +389,7 @@ function cluster-init() {
         # likely in some kubelet service
         # systemctl cat kubelet (which shows 2 instances btw)
         # so let's keep it simple for now
-        cp $MYDIR/yaml/manifests/konnectivity-server.yaml \
+        cp $KIDIR/yaml/manifests/konnectivity-server.yaml \
            /etc/kubernetes/manifests/
     }
 
@@ -636,9 +636,9 @@ doc-kube join-command "master node: display the command for workers to join"
 
 
 function -undo-cluster() {
-    cd $MYDIR
+    cd $KIDIR
     source configs/$(hostname --short)-config.sh
-    local output_dir=$(realpath -m $MYDIR/clusters_/${K8S_CLUSTER_NAME})
+    local output_dir=$(realpath -m $KIDIR/clusters_/${K8S_CLUSTER_NAME})
 
     echo y | kubeadm reset
     rm -rf ${output_dir}
@@ -691,20 +691,20 @@ function show-all() {
 
 doc-inspect version "display git hash for $0"
 function version() {
-    echo $(git "$@" rev-parse --abbrev-ref HEAD) / $(git -C $MYDIR log HEAD --format=format:%h -1)
+    echo $(git "$@" rev-parse --abbrev-ref HEAD) / $(git -C $KIDIR log HEAD --format=format:%h -1)
 }
 
 function pwd() {
-    echo $MYDIR
+    echo $KIDIR
 }
 
 function self-update() {
-    git -C $MYDIR pull
+    git -C $KIDIR pull
 }
 
 
 function testpod() {
-    cd $MYDIR/kiada
+    cd $KIDIR/kiada
     ./testpod.sh
 }
 
