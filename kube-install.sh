@@ -60,10 +60,7 @@ function load-config() {
 
 ### fedora
 
-# our version: f35
-# https://kubernetes.io/docs/setup/production-environment/container-runtimes/#cri-o
-# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-
+# our version: f36
 # still needed afterwards is tweaking your firewall
 
 ### miscell
