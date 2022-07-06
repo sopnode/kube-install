@@ -106,12 +106,21 @@ doc-install update-os "dnf or apt update"
 
 
 function install() {
+    install-yq
     install-k8s
     install-calico-plugin
     install-helm
     install-extras
 }
 doc-install install "meta-target to install k8s, extras and helm"
+
+function install-yq() {
+    # fedora yq is based on snap which is a pain...
+    YQ_VERSION=4.25.1
+    yq --version 2> /dev/null | grep -q $YQ_VERSION && return 0
+    curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64
+    chmod +x /usr/bin/yq
+}
 
 function install-calico-plugin() {
     [[ -z "$CALICO_VERSION" ]] && {
@@ -617,19 +626,6 @@ doc-kube join-cluster "worker node: join the cluster
 example: $0 join-cluster r2lab@sopnode-l1.inria.fr"
 
 
-# this snap-installed thing is not found when entering through ssh
-# unbelievable...
-function find-yq() {
-    if [ ! -z "$(type -t yq)" ]; then
-        return
-    elif [ -f /var/lib/snapd/snap/bin/yq ]; then
-        PATH=$PATH:/var/lib/snapd/snap/bin
-    else
-        echo "could not find command yq - exiting"
-        exit 1
-    fi
-}
-
 # on the master, for the nodes
 function join-command() {
     if [ ! -f $ADMIN_LOG ]; then
@@ -644,7 +640,6 @@ function join-command() {
     # but that's no longer possible as we use phases
     # assuming the tokens are all valid forever, so take the first
     # xxx a bit lazy to find the right ca-cert-hash...
-    find-yq
     local token=$(kubeadm token list --experimental-output yaml | yq .token | head -1)
     echo kubeadm join $(hostname):6443 --token $token --discovery-token-unsafe-skip-ca-verification
 }
