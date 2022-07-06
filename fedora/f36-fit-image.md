@@ -40,7 +40,7 @@ rm ~/.ssh/known_hosts*
 
 # this is not done as part of the prepare step
 # as it does not apply to the wired servers
-systemctl disable --now firewalld
+kube-install.sh prepare-firewall
 kube-install.sh prepare
 kube-install.sh install
 kube-install.sh show-rpms
@@ -50,9 +50,7 @@ dnf clean all
 
 ## postinstall
 ```
-# install yq
-curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64
-chmod +x /usr/bin/yq
+kube-install.sh install-yq
 
 # just in case
 ki leave-cluster

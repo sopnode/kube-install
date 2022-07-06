@@ -94,6 +94,19 @@ EOF
 doc-install prepare "miscell system-wide required settings"
 
 
+# FIT nodes only
+# as the servers run a carefully crafted firewall config
+function prepare-firewall() {
+    # for extra safety - avoid accidental disables
+    hostname | grep -q fit || { 
+        echo prepare-firewall cowardly refuses to disable firewall on a non-FIT node
+        return 1
+    }
+    systemctl disable --now firewalld
+}
+doc-install prepare-firewall "turn off firewalld - for FIT nodes only"
+
+
 function update-os() {
     [ -f /etc/fedora-release ] && dnf -y update
     [ -f /etc/lsb-release ]    && apt -y update
