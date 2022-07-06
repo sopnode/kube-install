@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: kiada-bare-pod
+  name: fping-bare-pod
 spec:
   containers:
-  - name: kiada-bare-cont
-    image: luksa/kiada:0.1
+  - name: fping-bare-cont
+    image: localhost/fedora-with-ping
     imagePullPolicy: IfNotPresent

@@ -718,8 +718,8 @@ function self-update() {
 
 
 function testpod() {
-    cd $KIDIR/kiada
-    ./testpod.sh
+    cd $KIDIR/testpod
+    ./testpod.sh -f
 }
 
 for subcommand in "$@"; do

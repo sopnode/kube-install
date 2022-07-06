@@ -1,5 +1,5 @@
 clusters_/
-kiada/create.yq
+testpod/create.yq
 book-and-notes/
 yaml/**/*.yaml
 *.bak

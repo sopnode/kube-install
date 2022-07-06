@@ -31,7 +31,7 @@
 # * one wired worker (typically sopnode-w3)
 # * one wireless worker in R2lab (typically fit01)
 #
-# on each of these workers we launch a testpod based on a simple fedora image (see `kiada/fedora-with-ping/Dockerfile`) with the basic networking tools (ping, host, nc, etc..)
+# on each of these workers we launch a testpod based on a simple fedora image (see `testpod/fping/Dockerfile`) with the basic networking tools (ping, host, nc, etc..)
 
 # %% [markdown]
 # ## what is tested ?

@@ -9,7 +9,7 @@ DEFAULT_FORCE=
 DEFAULT_RUN=true
 
 function usage() {
-    echo "Usage: $0 [-n node] [-i image] [-s]"
+    echo "Usage: $0 [-n node] [-i image] [-f] [-s]"
     exit 1
 }
 
@@ -34,10 +34,6 @@ function main() {
     local hostname=$(normalize-node $node | cut -d: -f2)
     local fullimage=$(normalize-image $image)
 
-    # echo shortname=$shortname
-    # echo hostname=$hostname
-    # echo fullimage=$fullimage
-
     [[ -z "$shortname" || -z "$hostname" ]] && {
         echo "unknown / something wrong with node $node";
         exit 1;
@@ -47,7 +43,7 @@ function main() {
         exit 1;
     }
 
-    readonly template=kiada-l1.yaml
+    readonly template=testpod-template.yaml
     local yamlfile="${image}-${shortname}.yaml"
     if [[ -f $yamlfile && -z "$force" ]]; then
         echo "$yamlfile already there - reusing"

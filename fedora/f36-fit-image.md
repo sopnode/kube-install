@@ -83,7 +83,7 @@ kube-install.sh leave-cluster
 # if relevant, build the fping image for kube-install's tests
 # build fping image
 cd $(kube-install.sh pwd)
-cd kiada
+cd testpod
 ./build.sh
 ```
 
