@@ -19,8 +19,10 @@ def load(filename):
     """
     df = pd.read_csv(filename, sep=';', names=['test','from','to','success','date'])
 
+    df_version = df[df.test == 'version']
+
     # remove the check-all entries that are not atomic
-    df = df[df.test != 'check-all']
+    df = df[~(df.test.isin(['check-all', 'version']))]
     # normalize success as a bool
     df.success = df.success == "OK"
 
@@ -42,10 +44,10 @@ def load(filename):
     # true if the test was crossing boundaries
     df2['cross'] = df2['wired-from'] != df2['wired-to']
 
-    df2_straight = df2[~df2.cross]
-    df2_cross = df2[df2.cross]
+    #df2_straight = df2[~df2.cross]
+    #df2_cross = df2[df2.cross]
 
-    return df1, df2, df2_straight, df2_cross
+    return df1, df2, df_version
 
 
 def draw_df1(df1, lax, rax):
@@ -87,6 +89,13 @@ def draw_df2(df2, ulax, urax, llax, lrax):
     ll.groupby('test').mean().plot.bar(ax=llax)
     lr.groupby('test').mean().plot.bar(ax=lrax)
 
+def display_df_version(df_version):
+    df = (df_version
+            .rename(columns={'success': 'version', 'from': 'hostname', 'to': 'rpm'})
+            .pivot_table('version', index='hostname', columns='rpm', aggfunc='first')
+    )
+    display(df)
+
 
 def show_all(df1, df2):
 
@@ -95,3 +104,9 @@ def show_all(df1, df2):
     draw_df1(df1, l1, r1)
     draw_df2(df2, l2, r2, l3, r3)
     fig.tight_layout()
+
+def show_file(filename):
+    df1, df2, df_version = load(filename)
+    show_all(df1, df2)
+    display_df_version(df_version)
+    return df1, df2

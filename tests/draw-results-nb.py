@@ -87,7 +87,7 @@ import matplotlib.pyplot as plt
 # %%
 # figures size
 from IPython.core.pylabtools import figsize
-figsize(10, 12)
+figsize(10, 10)
 
 # %%
 import postprocess
@@ -96,18 +96,14 @@ import postprocess
 # ## past results
 
 # %%
-#df1, df2, *_ = postprocess.load("SUMMARY-06-28-16-20-29.csv")
-#postprocess.show_all(df1, df2)
+#df1, df2 = postprocess.show_file("SUMMARY-06-28-16-20-29.csv")
 
 # %% [markdown]
 # ## latest results
 
 # %%
 latest = postprocess.latest_csv()
-df1, df2, *_ = postprocess.load(latest)
-
-print(f"{latest=}, {df1.shape=} {df2.shape=}")
-postprocess.show_all(df1, df2)
+df1, df2 = postprocess.show_file(latest)
 
 # %% [markdown]
 # ## digging...

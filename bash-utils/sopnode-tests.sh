@@ -270,11 +270,14 @@ function run-all() {
 }
 
 function log-rpm-versions() {
+    local hostname=$(hostname -s)
     local rpm
-    for rpm in kubelet kubeadm cri-o; do
+    for rpm in kubelet kubectl kubeadm cri-o; do
         local version=$(rpm -q --queryformat '%{VERSION}' $rpm)
-        -log-line version $(hostname -s) ${rpm} ${version}
+        -log-line version ${hostname} ${rpm} ${version}
     done
+    fedora_release=$(cut -d' ' -f3 < /etc/fedora-release)
+    -log-line version ${hostname} fedora $fedora_release
 }
 
 function clear-logs() {
