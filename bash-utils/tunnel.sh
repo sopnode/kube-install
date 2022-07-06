@@ -79,6 +79,7 @@ function join-tunnel-l1() {
 
     # routing
     ip route add 192.168.3.0/24 dev r2lab-sopnode
+    ip route add 192.168.2.0/24 dev r2lab-sopnode
     # same on this side
     ip route add 138.96.16.97 via 138.96.245.250 dev eth0
 }
@@ -101,6 +102,7 @@ function join-tunnel-sopnode() {
     # the SOPNODE side
     # the other side network
     ip route add 192.168.3.0/24 dev eth0 via 138.96.245.50
+    ip route add 192.168.2.0/24 dev eth0 via 138.96.245.50
     # the tunnel
     ip route add 10.3.1.0/24 dev eth0 via 138.96.245.50
     # faraday, otherwise it goes through the usual gateway
@@ -108,6 +110,7 @@ function join-tunnel-sopnode() {
 }
 function leave-tunnel-sopnode() {
     ip route del 192.168.3.0/24 dev eth0 via 138.96.245.50
+    ip route del 192.168.2.0/24 dev eth0 via 138.96.245.50
     ip route del 10.3.1.0/24 dev eth0 via 138.96.245.50
     ip route del 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
@@ -131,7 +134,8 @@ function test-tunnel() {
     id=$(sed -e s/fit// <<< $id)
     id=$(printf %d $id)
     local zid=$(printf %02d $id)
-    p1v 192.168.3.$id "fit${zid}"
+    p1v 192.168.3.$id "fit${zid} on 192.168.3.$id (must work)"
+    p1v 192.168.2.$id "data${zid} on 192.168.2.$id (may fail on some nodes)"
     p1v 138.96.16.97 faraday-pub
     p1v 192.168.3.100 faraday-priv
 #    p1v 10.3.1.3 faraday-tun
