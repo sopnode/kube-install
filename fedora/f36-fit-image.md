@@ -37,6 +37,10 @@ rm ~/.ssh/known_hosts*
 # clear-* are just in case...
 # kube-install.sh clear-rpms
 # kube-install.sh clear-images
+
+# this is not done as part of the prepare step
+# as it does not apply to the wired servers
+systemctl disable --now firewalld
 kube-install.sh prepare
 kube-install.sh install
 kube-install.sh show-rpms
