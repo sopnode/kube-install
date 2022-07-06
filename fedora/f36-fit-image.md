@@ -50,17 +50,17 @@ dnf clean all
 
 ## postinstall
 ```
-kube-install.sh install-yq
+kube-install.sh install-yq # may be useless...
 
 # just in case
-ki leave-cluster
+kube-install.sh leave-cluster
 ```
 
 checkpoint that image
 
 ```
-NODE=7
-rsave -o fedora-36-ki-0.13 $NODE
+NODE=1
+rsave -o fedora-36-ki-0.14 $NODE
 ```
 
 ## images
@@ -70,25 +70,42 @@ fetch-kube-images` won't work (cannot reach a master, etc..)
 
 plus, it is unclear that it would not pull unnecessary images
 
-so what I did for the `kube-f36-ki-0.13-images` image was to simply test
+so what I did for the `kube-f36-ki-0.14-images` image was to simply test
 
 ```
 crictl rmi --prune
 kube-install.sh join-cluster r2lab@sopnode-w2.inria.fr
+
+# WAIT until all the images have been pulled
+# should have 6 images
+# ---
+crictl images
+# docker.io/calico/cni
+# docker.io/calico/node
+# docker.io/calico/pod2daemon-flexvol
+# k8s.gcr.io/kube-proxy
+# registry.k8s.io/pause
+# us.gcr.io/k8s-artifacts-prod/kas-network-proxy/proxy-agent
+# ---
+
 # don't forget to leave-cluster once all is up and running
 kube-install.sh leave-cluster
 
 # if relevant, build the fping image for kube-install's tests
-# build fping image
+# build testpod image
 cd $(kube-install.sh pwd)
 cd testpod
 ./build.sh
+
+crictl images
+# now there should be 7 images, with the addition of
+# localhost/fedora-with-ping
 ```
 
 and then
 
 ```
-rsave -o fedora-36-ki-0.13-images $NODE
+rsave -o fedora-36-ki-0.14-images $NODE
 ```
 
 ## trying the standard fedora repo
