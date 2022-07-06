@@ -73,10 +73,6 @@ function load-config() {
 # https://medium.com/@kosta709/kubernetes-by-kubeadm-config-yamls-94e2ee11244
 
 
-# * silence apt install, esp. painful about kernel upgrades, that won't reboot on their own
-# (as if it could reboot...)
-export DEBIAN_FRONTEND=noninteractive
-
 # all nodes
 function prepare() {
 
