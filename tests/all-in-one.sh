@@ -77,10 +77,15 @@ function create() {
     ssh $L kube-install.sh create-cluster
 }
 
+function join-wired() {
+    ssh $W "kube-install.sh join-cluster r2lab@$LEADER"
+}
+function join-wireless() {
+    ssh $F "kube-install.sh join-cluster r2lab@$LEADER"
+}
 function join() {
-    for h in $W $F; do
-        ssh $h "kube-install.sh join-cluster r2lab@$LEADER"
-    done
+    join-wired
+    join-wireless
 }
 
 function testpods() { -map testpod; }
@@ -92,7 +97,7 @@ function trashpods() {
 function tests() {
     for h in $L $W; do
         echo "running $RUNS tests every $PERIOD s on $h"
-        ssh $h "clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
+        ssh $h "clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD; log-rpm-versions"
     done
     echo "running $RUNS tests every $PERIOD s on $F"
     # join-tunnel is recommended, although not crucial
@@ -101,7 +106,19 @@ function tests() {
 }
 
 function gather() {
-    ./gather-logs.sh $FITNODE
+    SUMMARY="SUMMARY-$(date +%m-%d-%H-%M-%S).csv"
+    rm -f $SUMMARY
+
+    for h in $L $W $F; do
+        rsync -ai $h:TESTS.csv GATHER-$h.csv
+        cat GATHER-$h.csv >> $SUMMARY
+    done
+
+    cat << EOF
+ipython
+import postprocess
+df1, df2, df2_straight, df2_cross = postprocess.load("$SUMMARY")
+EOF
 }
 
 ###

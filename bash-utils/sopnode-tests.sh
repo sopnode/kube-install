@@ -233,7 +233,7 @@ function -log-line() {
     local to="$1"; shift
     local success="$1"; shift
 
-    local hostname=$(hostname -s)
+    #local hostname=$(hostname -s)
     local date=$(date "+%Y-%m-%d:%H:%M:%S")
 
     echo "${test_function};${from};${to};${success};${date}" >> ~/TESTS.csv
@@ -267,6 +267,14 @@ function run-all() {
     [[ -z "$how_many" ]] && how_many=5
     [[ -z "$period" ]] && period=5
     -run-n-times check-all $how_many $period
+}
+
+function log-rpm-versions() {
+    local rpm
+    for rpm in kubelet kubeadm cri-o; do
+        local version=$(rpm -q --queryformat '%{VERSION}' $rpm)
+        -log-line version $(hostname -s) ${rpm} ${version}
+    done
 }
 
 function clear-logs() {
