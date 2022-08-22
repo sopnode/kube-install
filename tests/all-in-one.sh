@@ -3,6 +3,7 @@
 S=inria_sopnode
 RUNS=3
 PERIOD=2
+IMAGE=kubernetes
 
 # defaults set below - see set_*
 FITNODE=
@@ -43,6 +44,7 @@ function check-config() {
     echo LEADER=$LEADER
     echo WORKER=$WORKER
     echo FITNODE=$FITNODE
+    echo IMAGE=$IMAGE
     echo RUNS=$RUNS
     echo PERIOD=$PERIOD
     echo -n "type enter to confirm (or control-c to quit) -> "
@@ -50,7 +52,7 @@ function check-config() {
 }
 
 function load-image() {
-    ssh $S@faraday.inria.fr rhubarbe load -i kubernetes $FITNODE
+    ssh $S@faraday.inria.fr rhubarbe load -i $IMAGE $FITNODE
     ssh $S@faraday.inria.fr rhubarbe wait $FITNODE
 }
 
@@ -138,6 +140,7 @@ function usage() {
     echo "Usage: $0 [options] subcommand_1 .. subcommand_n"
     echo "Options:"
     echo "  -f 2: use fit02 for as the fit node"
+    echo "  -i kubernetes-f36: use that (faraday) image"
     echo "  -r 10: repeat the test 10 times"
     echo "  -p 3: wait for 3 seconds between each run"
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1"
@@ -149,9 +152,10 @@ function usage() {
 
 main() {
     set_fitnode 1
-    while getopts "f:r:p:o" opt; do
+    while getopts "f:i:r:p:o" opt; do
         case $opt in
             f) set_fitnode $OPTARG;;
+            i) IMAGE=$OPTARG;;
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
             o) set_leader l1; set_worker w1;;
