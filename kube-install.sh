@@ -512,6 +512,17 @@ function cluster-networking-calico() {
             ]
         )' \
         $calico_settings
+    # xxx this should be configurable
+    # need to rule out accessory interfaces like e.g. eth2 on sopnode-*
+    yq --inplace \
+        'with(select(document_index==0).spec.calicoNetwork;
+            .nodeAddressAutodetectionV4.cidrs = [
+                "192.168.3.0/24",
+                "138.96.0.0/16"
+                ]
+            )' \
+        $calico_settings
+    #
     kubectl create -f $calico_settings
 }
 
