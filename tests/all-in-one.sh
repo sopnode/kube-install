@@ -104,7 +104,7 @@ function tests() {
     echo "running $RUNS tests every $PERIOD s on $F"
     # join-tunnel is recommended, although not crucial
     # it only matters if you need a route from the fit node to the ipip tunnel endpoints
-    ssh $F "clear-logs; join-tunnel; set-fitnode $FITNODE; run-all $RUNS $PERIOD"
+    ssh $F "clear-logs; join-tunnel; set-fitnode $FITNODE; run-all $RUNS $PERIOD; log-rpm-versions"
 }
 
 function gather() {
