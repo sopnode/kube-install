@@ -1,32 +1,69 @@
 # requires: miscell for kill-from-ports
 
-# phase 1: while we have kube inst##############
 # test strategy is
-# w2: master
+# w2: leader
 # w3: regular worker
 # fitxx: some FIT node
+
+# register the actual configuration
+
+# set-leader l1
+# set-leader sopnode-l1
+# set-leader sopnode-l1.inria.fr
+function set-leader() {
+    local arg="$1"; shift
+    grep -q sopnode- <<< $arg || arg="sopnode-${arg}"
+    grep -q inria.fr <<< $arg || arg="${arg}.inria.fr"
+    export LEADER="$arg"
+    echo LEADER=$LEADER
+}
+function set-worker() {
+    local arg="$1"; shift
+    grep -q sopnode- <<< $arg || arg="sopnode-${arg}"
+    grep -q inria.fr <<< $arg || arg="${arg}.inria.fr"
+    export WORKER="$arg"
+    echo WORKER=$WORKER
+}
 
 # use e.g.
 # set-fitnode 06 or set-fitnode fit06
 # to choose which one is currently available for that test
-
 function set-fitnode() {
     local arg="$1"; shift
     arg=$(sed -e s/fit// <<< $arg)
     export FITNODE=fit$(printf "%02d" $arg)
     echo FITNODE=$FITNODE
 }
-function check-fitnode() {
+
+function check-globals() {
+    [[ -z "$LEADER" ]] && { echo "use command e.g. 'set-leader l1' to define your LEADER node"; return 1; }
+    [[ -z "$WORKER" ]] && { echo "use command e.g. 'set-WORKER l1' to define your WORKER node"; return 1; }
     [[ -z "$FITNODE" ]] && { echo "use command e.g. 'set-fitnode 19' to define your FIT node"; return 1; }
     return 0
+}
+
+function all-nodes() {
+    echo $LEADER $WORKER $FITNODE
+}
+
+function all-pods() {
+    function wired-pod() {
+        local wired="$1"; shift
+        local stem=$(sed -e s/sopnode-// -e s/.inria.fr// <<< $wired)
+        echo fping-${stem}-pod
+    }
+    function wireless-pod() {
+        local wireless="$1"; shift
+        echo fping-${wireless}-pod
+    }
+    echo $(wired-pod $LEADER) $(wired-pod $WORKER) $(wireless-pod $FITNODE)
 }
 
 
 # kick the test pod on each of the 3 nodes
 function start-testpods() {
-    local nodes="$@"
-    check-fitnode || return 1
-    [[ -z "$nodes" ]] && nodes="sopnode-w2.inria.fr sopnode-w3.inria.fr $FITNODE"
+    check-globals || return 1
+    local nodes=$(all-nodes)
     local node
     for node in $nodes; do
         ssh root@$node kube-install.sh testpod
@@ -171,9 +208,8 @@ function check-https() { -check-https $(local-pod) "$@"; }
 # test kubectl logs
 function check-logs() {
     # from the root context this time
-    local pods="$@"
-    check-fitnode || return 1
-    [[ -z "$pods" ]] && pods="fping-w2-pod fping-w3-pod fping-$FITNODE-pod"
+    check-globals || return 1
+    local pods=$(all-pods)
     local ok="true"
 
     local pod
@@ -194,9 +230,8 @@ function check-logs() {
 # test kubectl exec
 function check-execs() {
     # from the root context this time
-    local pods="$@"
-    check-fitnode || return 1
-    [[ -z "$pods" ]] && pods="fping-w2-pod fping-w3-pod fping-$FITNODE-pod"
+    check-globals || return 1
+    local pods=$(all-pods)
     local ok="true"
 
     local pod

@@ -9,6 +9,7 @@ IMAGE=kubernetes
 FITNODE=
 LEADER=
 WORKER=
+PROD=
 # shortcuts root@ on each box
 L=
 W=
@@ -97,18 +98,20 @@ function trashpods() {
 }
 
 function tests() {
-    for h in $L $W; do
-        echo "running $RUNS tests every $PERIOD s on $h"
-        ssh $h "clear-logs; set-fitnode $FITNODE; run-all $RUNS $PERIOD; log-rpm-versions"
-    done
-    echo "running $RUNS tests every $PERIOD s on $F"
     # join-tunnel is recommended, although not crucial
     # it only matters if you need a route from the fit node to the ipip tunnel endpoints
-    ssh $F "clear-logs; join-tunnel; set-fitnode $FITNODE; run-all $RUNS $PERIOD; log-rpm-versions"
+    ssh $F join-tunnel
+
+    for h in $L $W $F; do
+        echo "running $RUNS tests every $PERIOD s on $h"
+        ssh $h "clear-logs; set-leader $LEADER; set-worker $WORKER; set-fitnode $FITNODE; run-all $RUNS $PERIOD; log-rpm-versions"
+    done
 }
 
 function gather() {
-    SUMMARY="SUMMARY-$(date +%m-%d-%H-%M-%S).csv"
+    local msg=dev
+    [[ -n $PROD ]] && msg=prod
+    SUMMARY="SUMMARY-${msg}-$(date +%m-%d-%H-%M-%S).csv"
     rm -f $SUMMARY
 
     for h in $L $W $F; do
@@ -158,7 +161,7 @@ main() {
             i) IMAGE=$OPTARG;;
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
-            o) set_leader l1; set_worker w1;;
+            o) set_leader l1; set_worker w1; PROD=true;;
             \?) usage ;;
         esac
     done

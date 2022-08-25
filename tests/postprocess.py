@@ -3,6 +3,14 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+WIRED = ["l1", "w1", "w2", "w3"]
+
+from operator import ior # ior is |
+from functools import reduce
+
+def series_is_wired(s):
+    return reduce(ior, (s.str.contains(wired) for wired in WIRED))
+
 
 def latest_csv():
     return sorted(Path(".").glob("SUMM*.csv"),
@@ -27,10 +35,7 @@ def load(filename):
     df.success = df.success == "OK"
 
     # true if the test was originating on the wired side
-    df['wired-from'] = (df['from'].str.contains("l1")
-                      | df['from'].str.contains("w1")
-                      | df['from'].str.contains("w2")
-                      | df['from'].str.contains("w3"))
+    df['wired-from'] = series_is_wired(df['from'])
 
     # split into 2
     # check-dns and check-http are really checking against the outside world
@@ -40,9 +45,7 @@ def load(filename):
     df2 = df[~single_tests].copy()
 
     # true if the test was targeting the wired side
-    df2['wired-to'] = (df2['to'].str.contains("w2")
-                     | df2['to'].str.contains("w3")
-                     | df2['to'].str.contains("10.244"))
+    df2['wired-to'] = series_is_wired(df2['to'])
     # true if the test was crossing boundaries
     df2['cross'] = df2['wired-from'] != df2['wired-to']
 
