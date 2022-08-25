@@ -27,7 +27,9 @@ def load(filename):
     df.success = df.success == "OK"
 
     # true if the test was originating on the wired side
-    df['wired-from'] = (df['from'].str.contains("w2")
+    df['wired-from'] = (df['from'].str.contains("l1")
+                      | df['from'].str.contains("w1")
+                      | df['from'].str.contains("w2")
                       | df['from'].str.contains("w3"))
 
     # split into 2

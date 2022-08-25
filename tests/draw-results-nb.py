@@ -103,6 +103,7 @@ import postprocess
 
 # %%
 latest = postprocess.latest_csv()
+print(f"{latest=}")
 df1, df2 = postprocess.show_file(latest)
 
 # %% [markdown]
