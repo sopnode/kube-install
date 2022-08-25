@@ -192,7 +192,7 @@ function install-k8s() {
     fedora-install-k8s
     fetch-kube-images
 }
-doc-install install "install kubernetes core + images"
+doc-install install-k8s "install kubernetes core + images"
 
 function fedora-install-k8s() {
     cat <<EOF > /etc/yum.repos.d/kubernetes.repo
