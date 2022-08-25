@@ -725,10 +725,12 @@ function version() {
     echo $(git "$@" rev-parse --abbrev-ref HEAD) / $(git -C $KIDIR log HEAD --format=format:%h -1)
 }
 
+doc-inspect pwd "display install folder for $0"
 function pwd() {
     echo $KIDIR
 }
 
+doc-install self-update "sync $0 from upstream"
 function self-update() {
     local kigit="git -C $KIDIR"
     local remote_branch=$($kigit rev-parse --abbrev-ref --symbolic-full-name @{u})
@@ -737,6 +739,16 @@ function self-update() {
 }
 
 
+doc-install switch-branch "use new branch - typically devel - for $0; will run self-update"
+function switch-branch() {
+    local branch="$1"; shift
+    local kigit="git -C $KIDIR"
+    $kigit switch $branch
+    self-update
+}
+
+
+doc-kube testpod "create a local testpod"
 function testpod() {
     cd $KIDIR/testpod
     ./testpod.sh -f

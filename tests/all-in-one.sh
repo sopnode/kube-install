@@ -68,7 +68,7 @@ function refresh() {
     for h in $L $W; do
         ssh $h refresh
     done
-    ssh $F git -C kube-install pull
+    ssh $F kube-install.sh switch-branch devel
     versions
 }
 
