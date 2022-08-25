@@ -97,6 +97,7 @@ import postprocess
 
 # %%
 #df1, df2 = postprocess.show_file("SUMMARY-07-06-19-39-27.csv")
+df1, df2 = postprocess.show_file("SUMMARY-prod-08-25-13-22-42.csv")
 
 # %% [markdown]
 # ## latest results
@@ -109,6 +110,12 @@ df1, df2 = postprocess.show_file(latest)
 # %% [markdown]
 # ## digging...
 
+# %% [markdown]
+# ### in df1
+
+# %%
+df1.head(1)
+
 # %%
 # for example:
 
@@ -120,11 +127,24 @@ print(f"{extract1.shape[0]=}")
 
 extract1.head()
 
+# %% [markdown]
+# ### in df2
+
 # %%
 # df2 is a little different
 
-extract2 = df2[(df2['from'] == 'fping-w2-pod') & (df2['to'] == 'fping-w3-pod')]
+extract2 = df2[(df2['from'] == 'fping-w1-pod') & (df2['to'] == 'fping-l1-pod')]
 extract2
+
+# %% [markdown]
+# ### pings
+
+# %% [markdown]
+# a cross-table to see all the individual pings
+
+# %%
+pings = df2[df2.test == 'check-ping']
+pings.pivot_table('success', index='from', columns='to')
 
 # %% [markdown]
 # ****
