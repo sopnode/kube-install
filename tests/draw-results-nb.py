@@ -45,7 +45,7 @@
 #
 # and namely:
 #
-# * A. `check-api` checks the ability that a pod has to join the kubernetes API on 10.96.0.1
+# * A. `check-api` checks the ability **for a testpod** to join the kubernetes API on 10.96.0.1
 # * A. `check-dns` will check if names can be resolved **from the testpod**; the names to resolve are `kubernetes` `r2lab.inria.fr` and `github.com`
 # * A. `check-http` will check for outside connectivity **from a testpod**, by opening a tcp connection to some outside hosts; this targets `r2lab.inria.fr` `github.com` and `140.82.121.4` so obviously, if check-dns fails, we can get a maximum of 2/3 on this one
 #
@@ -64,7 +64,7 @@
 #   testpod will fail, BUT that IP address does solve hostnames when doing e.g.
 #   `host github.com 10.96.0.10`
 # * same for the `10.96.0.1`; that is why `check-api` checks for that properly
-#   using curl
+#   using `curl`
 # * note that `check-http` has 3 destinations, 2 of which are fqdn's; so when
 #   `check-dns` fails, the best that `check-http` can achieve is 1/3
 
@@ -73,9 +73,11 @@
 #
 # we show:
 #
-# * the A results in 2 diagrams; on the left hand side is when the test runs on the wired side, and on the right hand side the tests that run on the wireless side
+# * the A results in 2 diagrams (first line of diagrams)
+#   * on the **left hand side** is when the test **runs on the wired side**, 
+#   * and on the **right hand side** the tests that **run on the wireless side**
 #
-# * the B results are shown in 4 diagrams:
+# * the B results are shown in 4 diagrams (lines 2 and 3 of diagrams)
 #   * here again the tests that **originate on the wired** side are shown on the **left hand side**; so obviously the right hand side is for tests that run on the wireless side
 #   * on the **top row** we have the tests that run **towards the wired side**, so obviously the bottom is for tests that run towards the wireless side
 
@@ -140,11 +142,21 @@ extract2
 # ### pings
 
 # %% [markdown]
-# a cross-table to see all the individual pings
+# a cross-table to see all the individual pings (all node pairs)
 
 # %%
 pings = df2[df2.test == 'check-ping']
 pings.pivot_table('success', index='from', columns='to')
+
+# %% [markdown]
+# ### http
+
+# %% [markdown]
+# individually
+
+# %%
+https = df1[df1.test == 'check-http']
+https.pivot_table('success', columns='from')
 
 # %% [markdown]
 # ****
