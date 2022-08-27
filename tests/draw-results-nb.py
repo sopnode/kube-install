@@ -98,8 +98,7 @@ import postprocess
 # ## past results
 
 # %%
-#df1, df2 = postprocess.show_file("SUMMARY-07-06-19-39-27.csv")
-df1, df2 = postprocess.show_file("SUMMARY-prod-08-25-13-22-42.csv")
+#df1, df2 = postprocess.show_file("SUMMARY-prod-08-25-13-22-42.csv")
 
 # %% [markdown]
 # ## latest results
@@ -139,6 +138,20 @@ extract2 = df2[(df2['from'] == 'fping-w1-pod') & (df2['to'] == 'fping-l1-pod')]
 extract2
 
 # %% [markdown]
+# ### http individually
+
+# %%
+https = df1[df1.test == 'check-http']
+https.pivot_table('success', columns='from')
+
+# %% [markdown]
+# ### dns individually
+
+# %%
+https = df1[df1.test == 'check-dns']
+https.pivot_table('success', columns='from')
+
+# %% [markdown]
 # ### pings
 
 # %% [markdown]
@@ -147,16 +160,6 @@ extract2
 # %%
 pings = df2[df2.test == 'check-ping']
 pings.pivot_table('success', index='from', columns='to')
-
-# %% [markdown]
-# ### http
-
-# %% [markdown]
-# individually
-
-# %%
-https = df1[df1.test == 'check-http']
-https.pivot_table('success', columns='from')
 
 # %% [markdown]
 # ****
