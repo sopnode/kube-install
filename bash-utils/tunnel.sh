@@ -53,22 +53,45 @@ function -tunnel() {
 function join-tunnel() { -tunnel join; }
 function leave-tunnel() { -tunnel leave; }
 
+function create-routing-table() {
+    local id="$1"; shift
+    local name="$1"; shift
+    grep -q "$name" /etc/iproute2/rt_tables >& /dev/null || echo "$id $name" >> /etc/iproute2/rt_tables
+}
+
 function join-tunnel-faraday() {
     # ip/ip tunnel interface
     ip link add r2lab-sopnode type ipip local 138.96.16.97 remote 138.96.245.50
     ip addr add 10.3.1.3/24 dev r2lab-sopnode
     ip link set dev r2lab-sopnode up
 
-    # routing
+    # routing; need to resort to source routing
+    # because packets originating from either control or data
+    # MUST go through the ipip tunnel EVEN if targetting sopnode-l1
+    create-routing-table 100 from-private
+    ip rule add from 192.168.2.0/24 table from-private
+    ip rule add from 192.168.3.0/24 table from-private
+
+    ip route add 192.168.2.0/24 dev data table from-private
+    ip route add 192.168.3.0/24 dev control table from-private
+    ip route add 138.96.245.0/24 dev r2lab-sopnode table from-private
+    ip route add default via 138.96.16.110 dev internet table from-private
+
+    # packets from faraday itself
     # use the ipip tunnel for all nodes on the sopnode side
     ip route add 138.96.245.0/24 dev r2lab-sopnode
-    # except for sopnode-l1 that needs to go through the default route
-    # because otherwise the tunnel won't work !
+    # except for sopnode-l1 of course, that needs to go through
+    # the default route because otherwise the tunnel cannot work !
     ip route add 138.96.245.50/32 via 138.96.16.110 dev internet
 }
 function leave-tunnel-faraday() {
     ip route del 138.96.245.50/32 via 138.96.16.110 dev internet
+    ip route del 138.96.245.0/24 dev r2lab-sopnode
+
+    ip route flush table from-private
+
     ip link del dev r2lab-sopnode
+
 }
 
 function join-tunnel-l1() {
