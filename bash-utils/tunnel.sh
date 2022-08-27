@@ -3,14 +3,14 @@
 # helpers
 
 function p1() {
-      local box="$1"; shift
-      ping -c1 -w1 $box >& /dev/null
+    local box="$1"; shift
+    ping -c1 -w1 $box >& /dev/null
 }
 
 function p1v() {
-      local box="$1"; shift
-      local message="$1"; shift
-      p1 $box && echo "$message ($box) OK" || echo "$message ($box) KO"
+    local box="$1"; shift
+    local message="$1"; shift
+    p1 $box && echo "$message ($box) OK" || echo "$message ($box) KO"
 }
 
 
@@ -130,9 +130,9 @@ function test-tunnel() {
             id=1
         fi
         echo using default id=$id
-        fi
+    fi
     id=$(sed -e s/fit// <<< $id)
-    id=$(printf %d $id)
+    id=$(expr "$id")
     local zid=$(printf %02d $id)
     p1v 192.168.3.$id "fit${zid} on 192.168.3.$id (must work)"
     p1v 192.168.2.$id "data${zid} on 192.168.2.$id (may fail on some nodes)"

@@ -31,6 +31,7 @@ function set-worker() {
 function set-fitnode() {
     local arg="$1"; shift
     arg=$(sed -e s/fit// <<< $arg)
+    arg=$(expr "$arg")
     export FITNODE=fit$(printf "%02d" $arg)
     echo FITNODE=$FITNODE
 }
