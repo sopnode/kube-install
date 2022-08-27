@@ -5,7 +5,7 @@ RUNS=3
 PERIOD=2
 IMAGE=kubernetes
 
-# defaults set below - see set_*
+# defaults set below - see set-*
 FITNODE=
 LEADER=
 WORKER=
@@ -15,31 +15,32 @@ L=
 W=
 F=
 
-function set_leader() {
+function set-leader() {
     local leader="$1"; shift
     leader=$(sed -e s/sopnode-// -e 's/\.inria.fr//' <<< $leader)
     LEADER=sopnode-${leader}.inria.fr
     L=root@$LEADER
 }
 
-function set_worker() {
+function set-worker() {
     local worker="$1"; shift
     worker=$(sed -e s/sopnode-// -e 's/\.inria.fr//' <<< $worker)
     WORKER=sopnode-${worker}.inria.fr
     W=root@$WORKER
 }
 
-function set_fitnode() {
+function set-fitnode() {
     local fitnode="$1"; shift
     fitnode=$(sed -e s/fit// <<< $fitnode)
+    fitnode=$(expr "$fitnode")
     local zid=$(printf "%02d" $fitnode)
     FITNODE=fit${zid}
     F=root@$FITNODE
 }
 
-set_leader w2
-set_worker w3
-set_fitnode 1
+set-leader w2
+set-worker w3
+set-fitnode 1
 
 function check-config() {
     echo LEADER=$LEADER
@@ -154,14 +155,14 @@ function usage() {
 }
 
 main() {
-    set_fitnode 1
+    set-fitnode 1
     while getopts "f:i:r:p:o" opt; do
         case $opt in
-            f) set_fitnode $OPTARG;;
+            f) set-fitnode $OPTARG;;
             i) IMAGE=$OPTARG;;
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
-            o) set_leader l1; set_worker w1; PROD=true;;
+            o) set-leader l1; set-worker w1; PROD=true;;
             \?) usage ;;
         esac
     done
