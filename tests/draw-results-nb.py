@@ -109,6 +109,47 @@ print(f"{latest=}")
 df1, df2 = postprocess.show_file(latest)
 
 # %% [markdown]
+# ## zooming in
+
+# %% [markdown]
+# ### summary from df1
+
+# %%
+# http individually
+all_https = df1[df1.test == 'check-http']
+https = all_https.rename(columns={'success': 'http'}).pivot_table('http', columns='from')
+
+
+# %%
+# dns individually
+all_dnss = df1[df1.test == 'check-dns']
+dnss = all_dnss.rename(columns={'success': 'dns'}).pivot_table('dns', columns='from')
+
+
+# %%
+pd.concat([https, dnss])
+
+# %% [markdown]
+# ### execs
+
+# %% [markdown]
+# a cross-table to see all the individual execs (all node pairs)
+
+# %%
+pings = df2[df2.test == 'check-exec']
+pings.pivot_table('success', index='from', columns='to')
+
+# %% [markdown]
+# ### pings
+
+# %% [markdown]
+# a cross-table to see all the individual pings (all node pairs)
+
+# %%
+pings = df2[df2.test == 'check-ping']
+pings.pivot_table('success', index='from', columns='to')
+
+# %% [markdown]
 # ## digging...
 
 # %% [markdown]
@@ -136,30 +177,6 @@ extract1.head()
 
 extract2 = df2[(df2['from'] == 'fping-w1-pod') & (df2['to'] == 'fping-l1-pod')]
 extract2
-
-# %% [markdown]
-# ### http individually
-
-# %%
-https = df1[df1.test == 'check-http']
-https.pivot_table('success', columns='from')
-
-# %% [markdown]
-# ### dns individually
-
-# %%
-https = df1[df1.test == 'check-dns']
-https.pivot_table('success', columns='from')
-
-# %% [markdown]
-# ### pings
-
-# %% [markdown]
-# a cross-table to see all the individual pings (all node pairs)
-
-# %%
-pings = df2[df2.test == 'check-ping']
-pings.pivot_table('success', index='from', columns='to')
 
 # %% [markdown]
 # ****
