@@ -89,6 +89,8 @@ function leave-tunnel-faraday() {
     ip route del 138.96.245.0/24 dev r2lab-sopnode
 
     ip route flush table from-private
+    ip rule del from 192.168.2.0/24 table from-private
+    ip rule del from 192.168.3.0/24 table from-private
 
     ip link del dev r2lab-sopnode
 
