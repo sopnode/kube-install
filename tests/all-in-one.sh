@@ -87,6 +87,9 @@ function join-wired() {
 function join-wireless() {
     ssh $F "kube-install.sh join-cluster r2lab@$LEADER"
 }
+function leave-wireless() {
+    ssh $F "kube-install.sh leave-cluster"
+}
 function join() {
     join-wired
     join-wireless
