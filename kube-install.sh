@@ -667,6 +667,7 @@ doc-kube join-command "master node: display the command for workers to join"
 
 
 function -undo-cluster() {
+    [[ -n "$@" ]] && echo WARNING: extra args "$@" ignored
     cd $KIDIR
     source configs/$(hostname --short)-config.sh
     local output_dir=$(realpath -m $KIDIR/clusters_/${K8S_CLUSTER_NAME})
@@ -677,13 +678,21 @@ function -undo-cluster() {
     rm -rf /etc/cni/net.d
     systemctl stop kubelet
     systemctl disable kubelet
+}
 
-    echo "you might want to also run on your master something like
+function -undo-epilogue() {
+    echo "you might want to also run on your master something like:
 kubectl drain --ignore-daemonsets $(hostname)
 kubectl delete nodes $(hostname)
 "
 }
 
+
+# these 2 do roughly the same - however initially there was
+# * destroy-cluster to run on the leader
+# * leave-cluster to run on the nodes
+# it is probably a good practice to use them like this
+# as they may diverge again in the future
 function destroy-cluster() {
     -undo-cluster "$@"
 }
@@ -691,6 +700,7 @@ doc-kube destroy-cluster "undo create-cluster"
 
 function leave-cluster() {
     -undo-cluster "$@"
+    -undo-epilogue
 }
 doc-kube leave-cluster "undo join-cluster"
 
