@@ -682,7 +682,7 @@ function -undo-cluster() {
 
 function -undo-epilogue() {
     echo "you might want to also run on your master something like:
-kubectl drain --ignore-daemonsets $(hostname)
+kubectl drain --force --ignore-daemonsets $(hostname)
 kubectl delete nodes $(hostname)
 "
 }
