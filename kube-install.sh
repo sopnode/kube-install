@@ -669,7 +669,12 @@ doc-kube join-command "master node: display the command for workers to join"
 function -undo-cluster() {
     [[ -n "$@" ]] && echo WARNING: extra args "$@" ignored
     cd $KIDIR
-    source configs/$(hostname --short)-config.sh
+    local config=configs/$(hostname --short)-config.sh
+    if [ -f $config ]; then
+        source $config
+    else
+        echo WARNING - no config found in $config - ignored
+    fi
     local output_dir=$(realpath -m $KIDIR/clusters_/${K8S_CLUSTER_NAME})
 
     echo y | kubeadm reset
