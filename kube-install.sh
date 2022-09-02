@@ -530,7 +530,7 @@ function cluster-networking-calico() {
 function enable-multus() {
 #    git clone https://github.com/k8snetworkplumbingwg/multus-cni.git && cd multus-cni
 #    cat ./deployments/multus-daemonset-thick-plugin.yml | kubectl apply -f -
-    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick-plugin.yml
+    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
 }
 
 # untested yet
