@@ -172,12 +172,21 @@ doc-install install-extras "useful tools"
 
 
 # all nodes
-function install-helm() {
+# this is the recommended way, but does not offer an easy update path
+# so now that we focus on fedora, we'll use dnf instead
+function install-helm-alt() {
     cd
     [ -f /etc/fedora-release ] && dnf -y install openssl
     curl -fsSL -o install-helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
     bash install-helm.sh
     helm version
+}
+function uninstall-helm-alt() {
+    rm -f /usr/local/bin/helm
+}
+
+function install-helm() {
+    dnf install -y helm
 }
 doc-install install-helm "install helm"
 
