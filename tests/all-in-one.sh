@@ -193,7 +193,8 @@ function usage() {
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
     echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
-    echo "subcommand 'run' to run the tests"
+    echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
+    echo "subcommand 'leave-join' - use after setup, checks for nodes that go and come back - semi auto for now"
     exit 1
 }
 
