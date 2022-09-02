@@ -172,12 +172,21 @@ doc-install install-extras "useful tools"
 
 
 # all nodes
-function install-helm() {
+# this is the recommended way, but does not offer an easy update path
+# so now that we focus on fedora, we'll use dnf instead
+function install-helm-alt() {
     cd
     [ -f /etc/fedora-release ] && dnf -y install openssl
     curl -fsSL -o install-helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
     bash install-helm.sh
     helm version
+}
+function uninstall-helm-alt() {
+    rm -f /usr/local/bin/helm
+}
+
+function install-helm() {
+    dnf install -y helm
 }
 doc-install install-helm "install helm"
 
@@ -530,7 +539,7 @@ function cluster-networking-calico() {
 function enable-multus() {
 #    git clone https://github.com/k8snetworkplumbingwg/multus-cni.git && cd multus-cni
 #    cat ./deployments/multus-daemonset-thick-plugin.yml | kubectl apply -f -
-    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick-plugin.yml
+    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
 }
 
 # untested yet
@@ -667,8 +676,14 @@ doc-kube join-command "master node: display the command for workers to join"
 
 
 function -undo-cluster() {
+    [[ -n "$@" ]] && echo WARNING: extra args "$@" ignored
     cd $KIDIR
-    source configs/$(hostname --short)-config.sh
+    local config=configs/$(hostname --short)-config.sh
+    if [ -f $config ]; then
+        source $config
+    else
+        echo WARNING - no config found in $config - ignored
+    fi
     local output_dir=$(realpath -m $KIDIR/clusters_/${K8S_CLUSTER_NAME})
 
     echo y | kubeadm reset
@@ -677,15 +692,17 @@ function -undo-cluster() {
     rm -rf /etc/cni/net.d
     systemctl stop kubelet
     systemctl disable kubelet
+}
 
-    echo "you might want to also run on your master something like
-kubectl drain --ignore-daemonsets $(hostname)
+function -undo-epilogue() {
+    echo "you might want to also run on your master something like:
+kubectl drain --force --ignore-daemonsets $(hostname)
 kubectl delete nodes $(hostname)
 "
 }
 
 
-# these 2 do the same - however initially there was
+# these 2 do roughly the same - however initially there was
 # * destroy-cluster to run on the leader
 # * leave-cluster to run on the nodes
 # it is probably a good practice to use them like this
@@ -697,6 +714,7 @@ doc-kube destroy-cluster "undo create-cluster"
 
 function leave-cluster() {
     -undo-cluster "$@"
+    -undo-epilogue
 }
 doc-kube leave-cluster "undo join-cluster"
 

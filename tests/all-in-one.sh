@@ -84,12 +84,15 @@ function create() {
 function join-wired() {
     ssh $W "kube-install.sh join-cluster r2lab@$LEADER"
 }
-function join-wireless() {
+function join-fitnode() {
     ssh $F "kube-install.sh join-cluster r2lab@$LEADER"
+}
+function leave-fitnode() {
+    ssh $F "kube-install.sh leave-cluster"
 }
 function join() {
     join-wired
-    join-wireless
+    join-fitnode
 }
 
 function testpods() { -map testpod; }
@@ -138,7 +141,47 @@ function -steps() {
 
 function full-monty()   { -steps check-config load-image refresh leave create join testpods; }
 function setup()        { -steps check-config            refresh leave create join testpods; }
-function run()          { -steps check-config tests gather ; }
+function run()          { -steps check-config tests gather; }
+
+########## checking nodes that leave and join back
+
+# usage:
+# arg1=delay to wait in seconds (default to 120)
+function check-fitnode-is-ready() {
+    local timeout="$2"; shift
+    [[ -z "$timeout" ]] && timeout=120
+    echo "checking for $FITNODE to be ready in $L - timeout=$timeout"
+    ssh $L kubectl wait --timeout="${timeout}s" node --for=condition=Ready $FITNODE
+    local retcod="$?"
+    if [[ $retcod == 0 ]]; then
+        echo node $FITNODE is Ready
+    else
+        echo node $FITNODE NOT READy after $timeout s
+    fi
+    return $retcod
+}
+
+# assumed is a properly running cluster with the fitnode node attached
+# i.e. referred to as 'reference state' in https://github.com/parmentelat/kube-install/issues/16
+function leave-join-1() {
+    echo "leave-join-1: cleanly removing note $FITNODE from cluster"
+    ssh $L kubectl drain --force --ignore-daemonsets $FITNODE
+    ssh $L kubectl delete node $FITNODE
+    echo "leave-join-1: $FITNODE is leaving the cluster"
+    leave-fitnode
+    echo "xxx should we use an artificcial delay here ?"
+    echo "leave-join-1: $FITNODE is joining the cluster again"
+    join-fitnode
+    if check-fitnode-is-ready; then
+        echo leave-join-1 OK
+    else
+        echo leave-join-1 KO
+    fi
+}
+
+function leave-join() { -steps check-config; leave-join-1; }
+
+###
 
 function usage() {
     echo "Usage: $0 [options] subcommand_1 .. subcommand_n"
@@ -150,7 +193,8 @@ function usage() {
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
     echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
-    echo "subcommand 'run' to run the tests"
+    echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
+    echo "subcommand 'leave-join' - use after setup, checks for nodes that go and come back - semi auto for now"
     exit 1
 }
 
