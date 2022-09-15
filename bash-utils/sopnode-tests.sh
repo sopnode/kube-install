@@ -36,15 +36,27 @@ function set-fitnode() {
     echo FITNODE=$FITNODE
 }
 
+# use e.g.
+# set-fitnode 06 or set-fitnode fit06
+# to choose which one is currently available for that test
+function set-fitnode2() {
+    local arg="$1"; shift
+    arg=$(sed -e s/fit// <<< $arg)
+    arg=$(expr "$arg")
+    export FITNODE2=fit$(printf "%02d" $arg)
+    echo FITNODE2=$FITNODE2
+}
+
 function check-globals() {
     [[ -z "$LEADER" ]] && { echo "use command e.g. 'set-leader l1' to define your LEADER node"; return 1; }
     [[ -z "$WORKER" ]] && { echo "use command e.g. 'set-WORKER l1' to define your WORKER node"; return 1; }
     [[ -z "$FITNODE" ]] && { echo "use command e.g. 'set-fitnode 19' to define your FIT node"; return 1; }
+    [[ -z "$FITNODE2" ]] && { echo "use command e.g. 'set-fitnode2 19' to define your FIT node #2"; return 1; }
     return 0
 }
 
 function all-nodes() {
-    echo $LEADER $WORKER $FITNODE
+    echo $LEADER $WORKER $FITNODE $FITNODE2
 }
 
 function all-pods() {

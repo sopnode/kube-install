@@ -16,12 +16,14 @@ function usage() {
 function main() {
     local node=$DEFAULT_NODE
     local image=$DEFAULT_IMAGE
+    local extension=""
     local run=$DEFAULT_RUN
     local force=$DEFAULT_FORCE
-    while getopts "n:i:sf" opt; do
+    while getopts "n:i:e:sf" opt; do
         case $opt in
             n) node=$OPTARG;;
             i) image=$OPTARG;;
+            e) extension=$OPTARG;;
             s) run="";;
             f) force=true ;;
             \?) usage ;;
@@ -52,7 +54,7 @@ function main() {
         # adding all capabilities because these are for tests only
         # and typically a simple ping won't work out of the box
         cat > $script << EOF
-    .metadata.name = "${image}-${shortname}-pod"
+    .metadata.name = "${image}${extension}-${shortname}-pod"
     |
     .spec.containers[0].name = "${image}-${shortname}-cont"
     |

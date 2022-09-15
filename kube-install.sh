@@ -789,6 +789,10 @@ function testpod() {
     cd $KIDIR/testpod
     ./testpod.sh -f
 }
+function testpod2() {
+    cd $KIDIR/testpod
+    ./testpod.sh -f -e 2
+}
 
 for subcommand in "$@"; do
     case "$subcommand" in
