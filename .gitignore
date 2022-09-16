@@ -3,3 +3,7 @@ tests/testpod/create.yq
 book-and-notes/
 yaml/**/*.yaml
 *.bak
+*.csv
+__pycache__
+.ipynb_checkpoints
+.macnb
