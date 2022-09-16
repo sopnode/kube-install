@@ -31,7 +31,8 @@
 # * one wired worker (typically sopnode-w3)
 # * one wireless worker in R2lab (typically fit01)
 #
-# on each of these workers we launch a testpod based on a simple fedora image (see `testpod/fping/Dockerfile`) with the basic networking tools (ping, host, nc, etc..)
+# on each of these workers we launch a testpod based on a simple fedora image
+# (see `tests/testpod/fping/Dockerfile`) with the basic networking tools (ping, host, nc, etc..)
 
 # %% [markdown]
 # ## what is tested ?
@@ -49,9 +50,9 @@
 # * A. `check-dns` will check if names can be resolved **from the testpod**; the names to resolve are `kubernetes` `r2lab.inria.fr` and `github.com`
 # * A. `check-http` will check for outside connectivity **from a testpod**, by opening a tcp connection to some outside hosts; this targets `r2lab.inria.fr` `github.com` and `140.82.121.4` so obviously, if check-dns fails, we can get a maximum of 2/3 on this one
 #
-# *** 
+# ***
 #
-# * B. `check-ping` will run ping **inside the testpod** targetting the IP of all the other testpods (including itself); 
+# * B. `check-ping` will run ping **inside the testpod** targetting the IP of all the other testpods (including itself);
 # * B. `check-log` will run **inside the host** a call to `kubelet logs` for all testpods
 # * B. `check-exec` will run **inside the host** a call to `kubelet exec` for all testpods
 
@@ -74,7 +75,7 @@
 # we show:
 #
 # * the A results in 2 diagrams (first line of diagrams)
-#   * on the **left hand side** is when the test **runs on the wired side**, 
+#   * on the **left hand side** is when the test **runs on the wired side**,
 #   * and on the **right hand side** the tests that **run on the wireless side**
 #
 # * the B results are shown in 4 diagrams (lines 2 and 3 of diagrams)

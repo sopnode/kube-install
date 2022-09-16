@@ -786,11 +786,11 @@ function switch-branch() {
 
 doc-kube testpod "create a local testpod"
 function testpod() {
-    cd $KIDIR/testpod
+    cd $KIDIR/tests/testpod
     ./testpod.sh -f
 }
 function testpod2() {
-    cd $KIDIR/testpod
+    cd $KIDIR/tests/testpod
     ./testpod.sh -f -e 2
 }
 
