@@ -3,7 +3,7 @@
 source testpod-nodes.sh
 source testpod-images.sh
 
-DEFAULT_IMAGE=fping
+DEFAULT_IMAGE=uping
 DEFAULT_NODE=$(hostname)
 DEFAULT_FORCE=
 DEFAULT_RUN=true
