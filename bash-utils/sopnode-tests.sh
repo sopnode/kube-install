@@ -1,10 +1,5 @@
 # requires: miscell for kill-from-ports
 
-# test strategy is
-# w2: leader
-# w3: regular worker
-# fitxx: some FIT node
-
 # register the actual configuration
 
 # set-leader l1

@@ -1,5 +1,28 @@
 #!/bin/bash
 
+# this script is used to launch the end-to-end tests
+# encompassing 2 worker nodes on the wired side
+# and 2 FIT nodes
+#
+# it will:
+# load the kubernetes on the FIT nodes
+# make sure to pull kube-install to its latest version on all 4 nodes
+# re-create the k8s cluster on the wired leader
+# have all 4 nodes join that cluster
+# launch 2 (ubuntu) test pods on each node
+# and perform various tests in that environment
+#
+# the results are gathered in a SUMMARY-*.csv file
+# and they can be interpreted/visualized by the
+# notebook all-in-one-draw-results-nb.py
+# (currently tailored for vs-code)
+
+# what gets actually triggered on the various nodes
+# is in general
+# (*) either a call to kube-install.sh itself directly
+# (*) or a function defined in ../bash-utils/sopnode-tests.sh
+#     that gets shipped on the nodes as well
+
 S=inria_sopnode
 RUNS=3
 PERIOD=2

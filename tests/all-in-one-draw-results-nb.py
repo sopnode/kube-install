@@ -91,7 +91,7 @@ import pandas as pd
 
 # for this project we use vs-code and not jupyter
 # #%matplotlib notebook
-# %pip install ipympl
+# #%pip install ipympl
 # %matplotlib ipympl
 
 # %%
