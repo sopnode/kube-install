@@ -65,8 +65,10 @@ function check-config() {
 }
 
 function load-image() {
+    set -e
     ssh $S@faraday.inria.fr rhubarbe load -i $IMAGE $FITNODE $FITNODE2
     ssh $S@faraday.inria.fr rhubarbe wait $FITNODE $FITNODE2
+    set +e
 }
 
 function -map() {
@@ -159,9 +161,9 @@ function -steps() {
     done
 }
 
-function full-monty()   { -steps check-config load-image setup; }
-function setup()        { -steps check-config refresh leave create join testpods testpods2; }
-function run()          { -steps check-config tests gather; }
+function full-monty()   { -steps load-image setup; }
+function setup()        { -steps refresh leave create join testpods testpods2; }
+function run()          { -steps tests gather; }
 
 ########## checking nodes that leave and join back
 
@@ -199,7 +201,7 @@ function leave-join-1() {
     fi
 }
 
-function leave-join() { -steps check-config; leave-join-1; }
+function leave-join() { -steps leave-join-1; }
 
 ###
 
@@ -235,6 +237,7 @@ main() {
     shift $(($OPTIND - 1))
     [[ -z "$@" ]] && usage
 
+    check-config
 
     for subcommand in "$@"; do
         $subcommand
