@@ -91,7 +91,7 @@ crictl images
 # don't forget to leave-cluster once all is up and running
 kube-install.sh leave-cluster
 
-# if relevant, build the fping image for kube-install's tests
+# if relevant, build the uping image for kube-install's tests
 # build testpod image
 cd $(kube-install.sh pwd)
 cd testpod

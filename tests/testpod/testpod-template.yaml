@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: fping-bare-pod
+  name: uping-bare-pod
 spec:
   containers:
-  - name: fping-bare-cont
+  - name: uping-bare-cont
     image: localhost/fedora-with-ping
     imagePullPolicy: IfNotPresent

@@ -63,11 +63,11 @@ function all-pods() {
     function wired-pod() {
         local wired="$1"; shift
         local stem=$(sed -e s/sopnode-// -e s/.inria.fr// <<< $wired)
-        echo fping-${stem}-pod
+        echo uping-${stem}-pod
     }
     function wireless-pod() {
         local wireless="$1"; shift
-        echo fping-${wireless}-pod
+        echo uping-${wireless}-pod
     }
     echo $(wired-pod $LEADER) $(wired-pod $WORKER) $(wireless-pod $FITNODE)
 }
@@ -94,7 +94,7 @@ function trash-testpods() {
 # the test pod on the local box
 function local-pod() {
     local key=$(hostname | sed -e s/sopnode-// -e 's/\.inria.fr//')
-    echo fping-$key-pod
+    echo uping-$key-pod
 }
 
 function enter-local-pod() {

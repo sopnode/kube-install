@@ -31,8 +31,8 @@
 # * one wired worker (typically sopnode-w3)
 # * one wireless worker in R2lab (typically fit01)
 #
-# on each of these workers we launch a testpod based on a simple fedora image
-# (see `tests/testpod/fping/Dockerfile`) with the basic networking tools (ping, host, nc, etc..)
+# on each of these workers we launch a testpod based on a simple ubuntu image
+# (see `tests/testpod/uping/Dockerfile`) with the basic networking tools (ping, host, nc, etc..)
 
 # %% [markdown]
 # ## what is tested ?
@@ -177,7 +177,7 @@ extract1.head()
 # %%
 # df2 is a little different
 
-extract2 = df2[(df2['from'] == 'fping-w1-pod') & (df2['to'] == 'fping-l1-pod')]
+extract2 = df2[(df2['from'] == 'uping-w1-pod') & (df2['to'] == 'uping-l1-pod')]
 extract2
 
 # %% [markdown]
