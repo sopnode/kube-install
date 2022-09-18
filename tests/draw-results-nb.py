@@ -86,7 +86,13 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# %matplotlib notebook
+
+# %%
+
+# for this project we use vs-code and not jupyter
+# #%matplotlib notebook
+# %pip install ipympl
+# %matplotlib ipympl
 
 # %%
 # figures size
