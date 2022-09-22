@@ -30,7 +30,12 @@ function load-config() {
     export K8S_VERSION=1.24.2
     # this is a dnf module version number, looks like a subversion is not helping
     export CRIO_VERSION=1.24
-    export CALICO_VERSION=3.23.1
+    # this is only used to install kubectl-calico
+    export CALICOCTL_VERSION=3.24.1
+    # counter-intuitively enough, this is what actually
+    # determines the version of the calico components
+    # and tigera-operator 1.28.1 installs calico 3.24.1
+    export TIGERA_VERSION=1.28.1
 
     if [[ -n "$strict" ]]; then
         # spot the config file for that host
@@ -98,7 +103,7 @@ doc-install prepare "miscell system-wide required settings"
 # as the servers run a carefully crafted firewall config
 function prepare-firewall() {
     # for extra safety - avoid accidental disables
-    hostname | grep -q fit || { 
+    hostname | grep -q fit || {
         echo prepare-firewall cowardly refuses to disable firewall on a non-FIT node
         return 1
     }
@@ -132,8 +137,8 @@ function install-yq() {
 }
 
 function install-calico-plugin() {
-    [[ -z "$CALICO_VERSION" ]] && {
-        echo cannot install calico kubectl plugin at this time - CALICO_VERSION empty
+    [[ -z "$CALICOCTL_VERSION" ]] && {
+        echo cannot install calico kubectl plugin at this time - CALICOCTL_VERSION empty
         return
     }
     function installed-calico-version() {
@@ -152,9 +157,9 @@ function install-calico-plugin() {
     [[ -n "$force" ]] && do_it=true
     [[ -f /usr/bin/kubectl-calico ]] || do_it=true
     local client_version=$(installed-calico-version)
-    [[ "${client_version}" == "v${CALICO_VERSION}" ]] || do_it=true
+    [[ "${client_version}" == "v${CALICOCTL_VERSION}" ]] || do_it=true
     if [ -n "$do_it" ]; then
-        local url=https://github.com/projectcalico/calico/releases/download/v${CALICO_VERSION}/calicoctl-linux-amd64
+        local url=https://github.com/projectcalico/calico/releases/download/v${CALICOCTL_VERSION}/calicoctl-linux-amd64
         echo fetching kubectl-calico from $url
         curl -L $url -o /usr/bin/kubectl-calico
     fi
@@ -492,7 +497,10 @@ function cluster-networking() {
 }
 
 function cluster-networking-calico() {
-    kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+    # this is the location where to get the latest file at a given point in time
+    # to know the version in there, just grep for tigera/operator
+    # kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+    kubectl create -f $KIDIR/yaml/tigera-operator-${TIGERA_VERSION}.yaml
     # download before patching
     local calico_settings=/etc/kubernetes/calico-settings.yaml
     curl -o $calico_settings https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
