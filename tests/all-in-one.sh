@@ -29,6 +29,7 @@ RUNS=3
 PERIOD=2
 IMAGE=kubernetes
 WITH_WORKER=true
+WITH_FIT=true
 
 
 # defaults set below - see set-*
@@ -64,19 +65,30 @@ function set-worker() {
 
 function set-fitnode() {
     local fitnode="$1"; shift
-    fitnode=$(sed -e s/fit// <<< $fitnode)
-    fitnode=$(expr "$fitnode")
-    local zid=$(printf "%02d" $fitnode)
-    FITNODE=fit${zid}
-    F=root@$FITNODE
+    if [[ -z "$fitnode" ]]; then
+        echo "NO FIT NODE used in this test"
+        FITNODE=""
+        F=""
+    else
+        fitnode=$(sed -e s/fit// <<< $fitnode)
+        fitnode=$(expr "$fitnode")
+        local zid=$(printf "%02d" $fitnode)
+        FITNODE=fit${zid}
+        F=root@$FITNODE
+    fi
 }
 function set-fitnode2() {
     local fitnode="$1"; shift
-    fitnode=$(sed -e s/fit// <<< $fitnode)
-    fitnode=$(expr "$fitnode")
-    local zid=$(printf "%02d" $fitnode)
-    FITNODE2=fit${zid}
-    F2=root@$FITNODE2
+    if [[ -z "$fitnode" ]]; then
+        FITNODE2=""
+        F2=""
+    else
+        fitnode=$(sed -e s/fit// <<< $fitnode)
+        fitnode=$(expr "$fitnode")
+        local zid=$(printf "%02d" $fitnode)
+        FITNODE2=fit${zid}
+        F2=root@$FITNODE
+    fi
 }
 
 set-leader w2
@@ -253,6 +265,7 @@ function usage() {
     echo "  -p 3: wait for 3 seconds between each run (default=$PERIOD)"
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "  -w: (no-worker) do not use any worker node on the wired side"
+    echo "  -0: (0 radio) do not use any FIT node"
     echo "subcommand 'setup' to rebuild everything - use -l if rload is needed"
     echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
     echo "subcommand 'leave-join' - use after setup, checks for nodes that go and come back - semi auto for now"
@@ -261,7 +274,7 @@ function usage() {
 
 main() {
     set-fitnode 1
-    while getopts "f:F:li:r:p:ow" opt; do
+    while getopts "f:F:li:r:p:ow0" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
@@ -271,15 +284,18 @@ main() {
             p) PERIOD=$OPTARG;;
             o) set-leader l1; set-worker w1; PROD=true;;
             w) WITH_WORKER="";;
+            0) WITH_FIT="";;
             \?) usage ;;
         esac
     done
     shift $(($OPTIND - 1))
-    [[ -z "$@" ]] && usage
 
     [[ -n "$WITH_WORKER" ]] || set-worker
+    [[ -n "$WITH_FIT" ]] || { set-fitnode; set-fitnode2; }
 
     check-config
+
+    [[ -z "$@" ]] && usage
 
     for subcommand in "$@"; do
         $subcommand

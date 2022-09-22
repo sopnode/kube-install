@@ -68,7 +68,10 @@ def draw_df1(df1, lax, rax):
     rax.set_ylim((0, 1))
 
     lhs.groupby('test').mean().plot.bar(ax=lax)
-    rhs.groupby('test').mean().plot.bar(ax=rax)
+    try:
+        rhs.groupby('test').mean().plot.bar(ax=rax)
+    except:
+        pass
 
 
 def draw_df2(df2, ulax, urax, llax, lrax):
@@ -90,9 +93,12 @@ def draw_df2(df2, ulax, urax, llax, lrax):
     lrax.set_ylim((0, 1))
 
     ul.groupby('test').mean().plot.bar(ax=ulax)
-    ur.groupby('test').mean().plot.bar(ax=urax)
     ll.groupby('test').mean().plot.bar(ax=llax)
-    lr.groupby('test').mean().plot.bar(ax=lrax)
+    try:
+        ur.groupby('test').mean().plot.bar(ax=urax)
+        lr.groupby('test').mean().plot.bar(ax=lrax)
+    except:
+        pass
 
 def display_df_version(df_version):
     df = (df_version
