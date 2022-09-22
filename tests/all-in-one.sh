@@ -24,6 +24,7 @@
 #     that gets shipped on the nodes as well
 
 S=inria_sopnode
+RLOAD=""
 RUNS=3
 PERIOD=2
 IMAGE=kubernetes
@@ -192,9 +193,14 @@ function -steps() {
     done
 }
 
-function full-monty()   { -steps load-image setup; }
-function setup()        { -steps refresh leave create join testpods testpods2; }
-function run()          { -steps tests gather; }
+function setup() {
+    local steps="refresh leave create join testpods testpods2"
+    [[ -n "$RLOAD" ]] && { steps="load-image $steps"; }
+    -steps $steps
+}
+function run() {
+    -steps tests gather
+}
 
 ########## checking nodes that leave and join back
 
@@ -241,13 +247,13 @@ function usage() {
     echo "Options:"
     echo "  -f 3: use fit03 for as the fit node (defaut=$FITNODE)"
     echo "  -F 4: use fit04 for as the fit node #2 (defaut=$FITNODE2)"
+    echo "  -l: causes the FIT nodes to be rload'ed before anything else happens"
     echo "  -i kubernetes-f36: use that (faraday) image (default=$IMAGE)"
     echo "  -r 10: repeat the test 10 times (default=$RUNS)"
     echo "  -p 3: wait for 3 seconds between each run (default=$PERIOD)"
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "  -w: (no-worker) do not use any worker node on the wired side"
-    echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
-    echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
+    echo "subcommand 'setup' to rebuild everything - use -l if rload is needed"
     echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
     echo "subcommand 'leave-join' - use after setup, checks for nodes that go and come back - semi auto for now"
     exit 1
@@ -255,10 +261,11 @@ function usage() {
 
 main() {
     set-fitnode 1
-    while getopts "f:F:i:r:p:ow" opt; do
+    while getopts "f:F:li:r:p:ow" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
+            l) RLOAD="true";;
             i) IMAGE=$OPTARG;;
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
