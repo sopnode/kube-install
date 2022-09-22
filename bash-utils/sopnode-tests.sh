@@ -313,14 +313,35 @@ function run-all() {
 }
 
 function log-rpm-versions() {
-    local hostname=$(hostname -s)
+    local host_l=$(hostname)
+    local host_s=$(hostname -s)
+    # RPMS
     local rpm
     for rpm in kubelet kubectl kubeadm cri-o; do
         local version=$(rpm -q --queryformat '%{VERSION}' $rpm)
-        -log-line version ${hostname} ${rpm} ${version}
+        -log-line version ${host_s} ${rpm} ${version}
     done
-    fedora_release=$(cut -d' ' -f3 < /etc/fedora-release)
-    -log-line version ${hostname} fedora $fedora_release
+    # FEDORA RELEASE
+    fedora_version=$(cut -d' ' -f3 < /etc/fedora-release)
+    -log-line version ${host_s} fedora $fedora_version
+    # CALICO RELEASE
+    local calicopod=$(kubectl get pod -n calico-system --field-selector spec.nodeName=${host_l} \
+                      | grep calico-node \
+                      | awk '{print $1}')
+    local calico_version=$(kubectl get pod -n calico-system $calicopod -o yaml \
+                           | yq '.spec.containers[0].image' \
+                           | cut -d: -f2)
+    -log-line version ${host_s} calico ${calico_version}
+    # TIGERA RELEASE (all nodes report the same)
+    local tigera_version=$(kubectl get pod -n tigera-operator -o yaml \
+                           | yq '.items[0].spec.containers[0].image' \
+                           | cut -d: -f2)
+    -log-line version ${host_s} tigera ${tigera_version}
+    # FIT NODES: the rhubarbe image
+    if [ -f /etc/rhubarbe-image ]; then
+        local rhubarbe=$(tail -1 /etc/rhubarbe-image | cut -d' ' -f 8)
+        -log-line version ${host_s} image ${rhubarbe}
+    fi
 }
 
 function clear-logs() {
