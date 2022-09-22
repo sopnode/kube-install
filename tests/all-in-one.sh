@@ -27,6 +27,8 @@ S=inria_sopnode
 RUNS=3
 PERIOD=2
 IMAGE=kubernetes
+WITH_WORKER=true
+
 
 # defaults set below - see set-*
 FITNODE=
@@ -49,8 +51,14 @@ function set-leader() {
 function set-worker() {
     local worker="$1"; shift
     worker=$(sed -e s/sopnode-// -e 's/\.inria.fr//' <<< $worker)
-    WORKER=sopnode-${worker}.inria.fr
-    W=root@$WORKER
+    if [[ -z "$worker" ]]; then
+        echo "NO WORKER used in this test"
+        WORKER=""
+        W=""
+    else
+        WORKER=sopnode-${worker}.inria.fr
+        W=root@$WORKER
+    fi
 }
 
 function set-fitnode() {
@@ -237,6 +245,7 @@ function usage() {
     echo "  -r 10: repeat the test 10 times (default=$RUNS)"
     echo "  -p 3: wait for 3 seconds between each run (default=$PERIOD)"
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
+    echo "  -w: (no-worker) do not use any worker node on the wired side"
     echo "subcommand 'full-monty' to rebuild everything including rhubarbe-load"
     echo "subcommand 'setup' to rebuild everything except rhubarbe-load"
     echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
@@ -246,7 +255,7 @@ function usage() {
 
 main() {
     set-fitnode 1
-    while getopts "f:F:i:r:p:o" opt; do
+    while getopts "f:F:i:r:p:ow" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
@@ -254,11 +263,14 @@ main() {
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
             o) set-leader l1; set-worker w1; PROD=true;;
+            w) WITH_WORKER="";;
             \?) usage ;;
         esac
     done
     shift $(($OPTIND - 1))
     [[ -z "$@" ]] && usage
+
+    [[ -n "$WITH_WORKER" ]] || set-worker
 
     check-config
 
