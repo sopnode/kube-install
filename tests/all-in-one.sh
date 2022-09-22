@@ -87,7 +87,7 @@ function set-fitnode2() {
         fitnode=$(expr "$fitnode")
         local zid=$(printf "%02d" $fitnode)
         FITNODE2=fit${zid}
-        F2=root@$FITNODE
+        F2=root@$FITNODE2
     fi
 }
 
@@ -118,6 +118,7 @@ function load-image() {
 function -map() {
     local verb="$1"; shift
     for h in $L $W $F $F2; do
+        echo ======== MAP: $h: invoking verb ${verb}
         ssh $h kube-install.sh $verb
     done
 }
@@ -200,7 +201,7 @@ EOF
 
 function -steps() {
     for step in $@; do
-        echo RUNNING STEP $step
+        echo ======== RUNNING STEP $step
         $step
     done
 }
@@ -274,6 +275,7 @@ function usage() {
 
 main() {
     set-fitnode 1
+    set-fitnode2 2
     while getopts "f:F:li:r:p:ow0" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
