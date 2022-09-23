@@ -237,6 +237,7 @@ EOF
     echo using kube version $K8S_VERSION and cri-o version $CRIO_VERSION
 
     dnf -y --disableexcludes=kubernetes install kubelet-$K8S_VERSION kubeadm-$K8S_VERSION kubectl-$K8S_VERSION
+    dnf -y install kubernetes-cni
 
     # too early !
     # systemctl enable --now kubelet
