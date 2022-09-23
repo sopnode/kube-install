@@ -97,11 +97,20 @@ set-fitnode 1
 set-fitnode2 2
 
 function check-config() {
+    echo "----"
+    echo S=$S
+    echo "----"
+    if [[ -n "$RLOAD" ]]; then
+        echo IMAGE=$IMAGE
+    else
+        echo no image loaded
+    fi
+    echo "----"
     echo LEADER=$LEADER
     echo WORKER=$WORKER
     echo FITNODE=$FITNODE
     echo FITNODE2=$FITNODE2
-    echo IMAGE=$IMAGE
+    echo "----"
     echo RUNS=$RUNS
     echo PERIOD=$PERIOD
     echo -n "type enter to confirm (or control-c to quit) -> "
@@ -267,6 +276,7 @@ function usage() {
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "  -w: (no-worker) do not use any worker node on the wired side"
     echo "  -0: (0 radio) do not use any FIT node"
+    echo "  -s slicename - default is $S"
     echo "subcommand 'setup' to rebuild everything - use -l if rload is needed"
     echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
     echo "subcommand 'leave-join' - use after setup, checks for nodes that go and come back - semi auto for now"
@@ -276,7 +286,7 @@ function usage() {
 main() {
     set-fitnode 1
     set-fitnode2 2
-    while getopts "f:F:li:r:p:ow0" opt; do
+    while getopts "f:F:li:r:p:ow0s:" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
@@ -287,6 +297,7 @@ main() {
             o) set-leader l1; set-worker w1; PROD=true;;
             w) WITH_WORKER="";;
             0) WITH_FIT="";;
+            s) S=$OPTARG;;
             \?) usage ;;
         esac
     done
