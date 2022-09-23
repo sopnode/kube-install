@@ -551,6 +551,21 @@ function enable-multus() {
     kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
 }
 
+
+function multus-network-attachment() {
+    local ifname="$1"; shift
+    local subnet_prefix="$1"; shift
+    export IFNAME=$ifname
+    export SUBNET_PREFIX=$subnet_prefix
+    envsubst < $KIDIR/yaml/multus/network-attachment.yaml.in | kubectl create -f -
+}
+function multus-network-attachments() {
+    multus-network-attachment eth0 10.100.1
+    multus-network-attachment data 10.100.2
+    multus-network-attachment control 10.100.3
+}
+
+
 # untested yet
 # various options for the networking
 # flannel -- https://gist.github.com/rkaramandi/44c7cea91501e735ea99e356e9ae7883
