@@ -5,7 +5,7 @@
 # and 2 FIT nodes
 #
 # it will:
-# load the kubernetes on the FIT nodes
+# (optionnally) load the kubernetes on the FIT nodes
 # make sure to pull kube-install to its latest version on all 4 nodes
 # re-create the k8s cluster on the wired leader
 # have all 4 nodes join that cluster
@@ -124,65 +124,62 @@ function load-image() {
     set +e
 }
 
-function -map() {
+function -map-some() {
     local verb="$1"; shift
-    for h in $L $W $F $F2; do
+    for h in "$@"; do
         echo ======== MAP: $h: invoking verb ${verb}
         ssh $h kube-install.sh $verb
     done
 }
 
-function refresh() {
-    for h in $L $W; do
-        ssh $h refresh
-    done
-    for h in $F $F2; do
-        ssh $h kube-install.sh switch-branch devel \; kube-install.sh self-update
-    done
-    versions
+function -map-all() {
+    local verb="$1"; shift
+    -map-some $verb $L $W $F $F2
 }
 
-function versions() { -map version; }
+function self-update() {
+    -map-some self-update $L $W
+    -map-some "switch-branch devel" $F $F2
+    -map-some self-update $F $F2
+}
 
-function leave() { -map leave-cluster; }
+function versions() { -map-all version; }
+
+function leave() {
+    -map-some leave-cluster $W $F $F2
+    -map-some destroy-cluster $L
+}
 
 function create() {
-    ssh $L kube-install.sh create-cluster
+    -map-some create-cluster $L
 }
 
 function join-wired() {
-    ssh $W "kube-install.sh join-cluster r2lab@$LEADER"
+    -map-some "join-cluster r2lab@$LEADER" $W
 }
 function join-fitnodes() {
-    for h in $F $F2; do
-        ssh $h "kube-install.sh join-cluster r2lab@$LEADER"
-    done
+    -map-some "join-cluster r2lab@$LEADER" $F $F2
 }
 function leave-fitnodes() {
-    for h in $F $F2; do
-        ssh $h "kube-install.sh leave-cluster"
-    done
+    -map-some leave-cluster $F $F2
 }
 function join() {
     join-wired
     join-fitnodes
 }
 function enable-multus() {
-    ssh $L "kube-install.sh enable-multus"
+    -map-some enable-multus $L
 }
 
 function multus-network-attachments() {
-    echo ======== $L: invoking verb multus-network-attachments
-    ssh $L "kube-install.sh multus-network-attachments"
+    -map-some multus-network-attachments $L
 }
 
-function testpods() { -map testpod; }
-function testpods2() { -map testpod2; }
-function testpods-multus() { -map testpod-multus; }
+function testpods() { -map-all testpod; }
+function testpods2() { -map-all testpod2; }
+function testpods-multus() { -map-all testpod-multus; }
 
-function trashpods() {
-    ssh $L "trash-testpods"
-}
+function trashpods() { -map-some trash-testpods $L; }
 
 function tests() {
     # join-tunnel is recommended, although not crucial
@@ -225,7 +222,7 @@ function -steps() {
 }
 
 function setup() {
-    local steps="refresh leave create join enable-multus multus-network-attachments testpods testpods2 testpods-multus"
+    local steps="self-update versions leave create join enable-multus multus-network-attachments testpods testpods2 testpods-multus"
     [[ -n "$RLOAD" ]] && { steps="load-image $steps"; }
     -steps $steps
 }
