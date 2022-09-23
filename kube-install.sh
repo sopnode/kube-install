@@ -728,8 +728,8 @@ doc-kube leave-cluster "undo join-cluster"
 
 
 function enable-multus() {
-    # used to be plain multus-daemonset.yml
-    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-crio.yml
+    # the multus-daemonset-crio.yml seems to be more harmful then helpful
+    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
 }
 doc-kube enable-multus "deploy the multus networking layer for support of multiple interfaces"
 
