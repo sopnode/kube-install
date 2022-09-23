@@ -811,6 +811,10 @@ function testpod2() {
     cd $KIDIR/tests/testpod
     ./testpod.sh -f -e 2
 }
+function testpod-multus() {
+    cd $KIDIR/tests/testpod
+    ./testpod.sh -f -m
+}
 
 for subcommand in "$@"; do
     case "$subcommand" in

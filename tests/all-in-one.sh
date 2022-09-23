@@ -167,9 +167,18 @@ function join() {
     join-wired
     join-fitnodes
 }
+function enable-multus() {
+    ssh $L "kube-install.sh enable-multus"
+}
+
+function multus-network-attachments() {
+    echo ======== $L: invoking verb multus-network-attachments
+    ssh $L "kube-install.sh multus-network-attachments"
+}
 
 function testpods() { -map testpod; }
 function testpods2() { -map testpod2; }
+function testpods-multus() { -map testpod-multus; }
 
 function trashpods() {
     ssh $L "trash-testpods"
@@ -216,7 +225,7 @@ function -steps() {
 }
 
 function setup() {
-    local steps="refresh leave create join testpods testpods2"
+    local steps="refresh leave create join enable-multus multus-network-attachments testpods testpods2 testpods-multus"
     [[ -n "$RLOAD" ]] && { steps="load-image $steps"; }
     -steps $steps
 }

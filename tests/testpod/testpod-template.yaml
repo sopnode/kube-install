@@ -7,3 +7,7 @@ spec:
   - name: uping-bare-cont
     image: localhost/fedora-with-ping
     imagePullPolicy: IfNotPresent
+    # the fedora:latest image at least does not come
+    # with anything useful starting up at boot
+    command: ["bash"]
+    args: ["-c", "while true; do echo BEEP; sleep 1; done"]
