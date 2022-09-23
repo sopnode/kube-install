@@ -9,7 +9,9 @@ DEFAULT_FORCE=
 DEFAULT_RUN=true
 
 function usage() {
-    echo "Usage: $0 [-n node] [-i image] [-f] [-s]"
+    echo "Usage: $0 [-n node] [-i image] [-e ext] [-s] [-f]"
+    echo " -s: create yaml file, but do not run"
+    echo " -f: force creation of the yaml file even if already present"
     exit 1
 }
 
