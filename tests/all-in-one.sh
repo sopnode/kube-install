@@ -197,7 +197,7 @@ function tests() {
 function gather() {
     local msg=dev
     [[ -n $PROD ]] && msg=prod
-    SUMMARY="SUMMARY-${msg}-$(date +%m-%d-%H-%M-%S).csv"
+    SUMMARY="SUMMARY-${msg}-$(date +%m-%d-%H-%M).csv"
     rm -f $SUMMARY
 
     for h in $L $W $F $F2; do
@@ -316,9 +316,11 @@ main() {
 
     [[ -z "$@" ]] && usage
 
-    for subcommand in "$@"; do
+    local first="$1"; shift
+    local log=all-in-one-log-$(date +%m-%d-%H-%M)-${first}.txt
+    for subcommand in $first "$@"; do
         $subcommand
-    done
+    done | tee $log
 }
 
 main "$@"
