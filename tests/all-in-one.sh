@@ -147,25 +147,16 @@ function versions() { -map-all version; }
 
 function leave() {
     -map-some leave-cluster $W $F $F2
+}
+function destroy() {
     -map-some destroy-cluster $L
 }
-
 function create() {
     -map-some create-cluster $L
 }
 
-function join-wired() {
-    -map-some "join-cluster r2lab@$LEADER" $W
-}
-function join-fitnodes() {
-    -map-some "join-cluster r2lab@$LEADER" $F $F2
-}
-function leave-fitnodes() {
-    -map-some leave-cluster $F $F2
-}
 function join() {
-    join-wired
-    join-fitnodes
+    -map-some "join-cluster r2lab@$LEADER" $W $F $F2
 }
 function enable-multus() {
     -map-some enable-multus $L
@@ -179,7 +170,7 @@ function testpods() { -map-all testpod; }
 function testpods2() { -map-all testpod2; }
 function testpods-multus() { -map-all testpod-multus; }
 
-function trashpods() { -map-some trash-testpods $L; }
+function trashpods() { ssh $L trash-testpods; }
 
 function tests() {
     # join-tunnel is recommended, although not crucial
@@ -216,13 +207,13 @@ EOF
 
 function -steps() {
     for step in $@; do
-        echo ======== RUNNING STEP $step
+        echo ================ RUNNING STEP $step
         $step
     done
 }
 
 function setup() {
-    local steps="self-update versions leave create join enable-multus multus-network-attachments testpods testpods2 testpods-multus"
+    local steps="self-update versions leave destroy create join enable-multus multus-network-attachments testpods testpods2 testpods-multus"
     [[ -n "$RLOAD" ]] && { steps="load-image $steps"; }
     -steps $steps
 }

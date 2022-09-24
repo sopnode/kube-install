@@ -69,20 +69,13 @@ function all-pods() {
 
 
 # kick the test pod on each of the 3 nodes
-function start-testpods() {
-    check-globals || return 1
-    local nodes=$(all-nodes)
-    local node
-    for node in $nodes; do
-        ssh root@$node kube-install.sh testpod
-    done
-}
 function trash-testpods() {
     local pods=$(kubectl get pod -o yaml | yq ".items[].metadata.name")
     local pod
     for pod in $pods; do
-        kubectl delete pod $pod
+        kubectl delete pod $pod &
     done
+    wait
 }
 
 
