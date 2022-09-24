@@ -92,6 +92,12 @@ function local-pod() {
     echo uping-$key-pod
 }
 
+# the test pod on the local box
+function local-multus-pod() {
+    local key=$(hostname | sed -e s/sopnode-// -e 's/\.inria.fr//')
+    echo multus-$key-pod
+}
+
 function enter-local-pod() {
     local pod=$(local-pod)
     [[ -z "$pod" ]] && { echo could not locate local pod; return 1; }
@@ -256,6 +262,20 @@ function check-execs() {
     [[ -n "$ok" ]] && return 0 || return 1
 }
 
+function check-multus() {
+    check-globals || return 1
+    local hostname=$(hostname -s)
+    local pod=$(local-multus-pod)
+    local ifname=net1
+    local P="====== $hostname: checking for $ifname in $pod -> "
+    command="kubectl exec -n default $pod ip add show $ifname"
+    echo $command
+    local success=OK
+    $command
+    [[ $? == 0 ]] && echo $P OK || { echo $P KO; ok=""; success=KO; }
+    -log-line check-multus $hostname $ifname $success
+}
+
 function check-all() {
     check-api &
     check-pings &
@@ -263,6 +283,7 @@ function check-all() {
     check-https &
     check-logs &
     check-execs &
+    check-multus &
 }
 
 
