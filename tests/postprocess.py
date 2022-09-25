@@ -108,16 +108,17 @@ def display_df_version(df_version):
     display(df)
 
 
-def show_all(df1, df2):
+def show_all(df1, df2, filename):
 
     fig, ((l1, r1), (l2, r2), (l3, r3)) = plt.subplots(3, 2)
 
     draw_df1(df1, l1, r1)
     draw_df2(df2, l2, r2, l3, r3)
+    fig.suptitle(filename)
     fig.tight_layout()
 
 def show_file(filename):
     df1, df2, df_version = load(filename)
-    show_all(df1, df2)
+    show_all(df1, df2, filename)
     display_df_version(df_version)
     return df1, df2
