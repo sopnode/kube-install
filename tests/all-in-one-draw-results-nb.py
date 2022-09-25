@@ -106,18 +106,35 @@ import postprocess
 # ## past results
 
 # %%
-#df1, df2 = postprocess.show_file("SUMMARY-prod-08-25-13-22-42.csv")
+#df1, df2 = postprocess.show_file("SUMMARY-dev-09-24-17-17.csv")
 
 # %% [markdown]
 # ## latest results
 
 # %%
+# usually we want to process the latest csv file
 latest = postprocess.latest_csv()
 print(f"{latest=}")
 df1, df2 = postprocess.show_file(latest)
 
 # %% [markdown]
+# ## specific focus
+
+# %%
+here we are interested in a series of 4 consecutive runs
+
+# %%
+from pathlib import Path
+df1_df2_s = [postprocess.show_file(csv) for csv in Path('.').glob("SUMMARY-dev-09-25-10*.csv")]
+
+# %% [markdown]
 # ## zooming in
+
+# %%
+# consolidate
+df1 = pd.concat([df1 for df1, df2 in df1_df2_s])
+df2 = pd.concat([df2 for df1, df2 in df1_df2_s])
+
 
 # %% [markdown]
 # ### summary from df1
@@ -164,7 +181,7 @@ pings.pivot_table('success', index='from', columns='to')
 # ### in df1
 
 # %%
-df1.head(1)
+df1.head(3)
 
 # %%
 # for example:
@@ -175,7 +192,12 @@ extract1 = df1[(~df1['wired-from']) & (df1['test']=='check-api')]
 # how many entries
 print(f"{extract1.shape[0]=}")
 
-extract1.head()
+extract1.head(3)
+
+# %%
+# when multus works all the time, we get unique -> 1 in this output
+multus = df1[df1['test'] == 'check-multus']
+multus['success'].describe()
 
 # %% [markdown]
 # ### in df2
