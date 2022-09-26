@@ -57,14 +57,16 @@ function all-nodes() {
 function all-pods() {
     function wired-pod() {
         local wired="$1"; shift
+        [[ -z "$wired" ]] && return 0
         local stem=$(sed -e s/sopnode-// -e s/.inria.fr// <<< $wired)
         echo uping-${stem}-pod
     }
     function wireless-pod() {
         local wireless="$1"; shift
+        [[ -z "$wireless" ]] && return 0
         echo uping-${wireless}-pod
     }
-    echo $(wired-pod $LEADER) $(wired-pod $WORKER) $(wireless-pod $FITNODE)
+    echo $(wired-pod $LEADER) $(wired-pod $WORKER) $(wireless-pod $FITNODE) $(wired-pod $FITNODE2)
 }
 
 
