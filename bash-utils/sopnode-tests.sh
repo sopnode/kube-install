@@ -331,7 +331,7 @@ function log-rpm-versions() {
     local host_s=$(hostname -s)
     # RPMS
     local rpm
-    for rpm in kubelet kubectl kubeadm cri-o; do
+    for rpm in kubelet kubectl kubeadm cri-o kubernetes-cni; do
         local version=$(rpm -q --queryformat '%{VERSION}' $rpm)
         -log-line version ${host_s} ${rpm} ${version}
     done
