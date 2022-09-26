@@ -6,6 +6,7 @@
 # set-leader sopnode-l1
 # set-leader sopnode-l1.inria.fr
 function set-leader() {
+    _leader_defined=true
     local arg="$1"; shift
     grep -q sopnode- <<< $arg || arg="sopnode-${arg}"
     grep -q inria.fr <<< $arg || arg="${arg}.inria.fr"
@@ -13,9 +14,12 @@ function set-leader() {
     echo LEADER=$LEADER
 }
 function set-worker() {
+    _worker_defined=true
     local arg="$1"; shift
-    grep -q sopnode- <<< $arg || arg="sopnode-${arg}"
-    grep -q inria.fr <<< $arg || arg="${arg}.inria.fr"
+    if [[ -n "$arg" ]]; then
+        grep -q sopnode- <<< $arg || arg="sopnode-${arg}"
+        grep -q inria.fr <<< $arg || arg="${arg}.inria.fr"
+    fi
     export WORKER="$arg"
     echo WORKER=$WORKER
 }
@@ -24,10 +28,14 @@ function set-worker() {
 # set-fitnode 06 or set-fitnode fit06
 # to choose which one is currently available for that test
 function set-fitnode() {
+    _fitnode_defined=true
     local arg="$1"; shift
-    arg=$(sed -e s/fit// <<< $arg)
-    arg=$(expr "$arg")
-    export FITNODE=fit$(printf "%02d" $arg)
+    if [[ -n "$arg" ]]; then
+        arg=$(sed -e s/fit// <<< $arg)
+        arg=$(expr "$arg")
+        arg=fit$(printf "%02d" $arg)
+    fi
+    export FITNODE=$arg
     echo FITNODE=$FITNODE
 }
 
@@ -35,18 +43,22 @@ function set-fitnode() {
 # set-fitnode 06 or set-fitnode fit06
 # to choose which one is currently available for that test
 function set-fitnode2() {
+    _fitnode2_defined=true
     local arg="$1"; shift
-    arg=$(sed -e s/fit// <<< $arg)
-    arg=$(expr "$arg")
-    export FITNODE2=fit$(printf "%02d" $arg)
+    if [[ -n "$arg" ]]; then
+        arg=$(sed -e s/fit// <<< $arg)
+        arg=$(expr "$arg")
+        arg=fit$(printf "%02d" $arg)
+    fi
+    export FITNODE2=$arg
     echo FITNODE2=$FITNODE2
 }
 
 function check-globals() {
-    [[ -z "$LEADER" ]] && { echo "use command e.g. 'set-leader l1' to define your LEADER node"; return 1; }
-    [[ -z "$WORKER" ]] && { echo "use command e.g. 'set-WORKER l1' to define your WORKER node"; return 1; }
-    [[ -z "$FITNODE" ]] && { echo "use command e.g. 'set-fitnode 19' to define your FIT node"; return 1; }
-    [[ -z "$FITNODE2" ]] && { echo "use command e.g. 'set-fitnode2 19' to define your FIT node #2"; return 1; }
+    [[ -z "$_leader_defined" ]] && { echo "use command e.g. 'set-leader l1' to define your LEADER node"; return 1; }
+    [[ -z "$_worker_defined" ]] && { echo "use command e.g. 'set-WORKER w1' to define your WORKER node"; return 1; }
+    [[ -z "$_fitnode_defined" ]] && { echo "use command e.g. 'set-fitnode 1' to define your FIT node"; return 1; }
+    [[ -z "$_fitnode2_defined" ]] && { echo "use command e.g. 'set-fitnode2 2' to define your FIT node #2"; return 1; }
     return 0
 }
 
