@@ -341,6 +341,8 @@ function run-all() {
 function log-rpm-versions() {
     local host_l=$(hostname)
     local host_s=$(hostname -s)
+    # kube-install sha1
+    -log-line version ${host_s} kube-install $(kube-install.sh sha1)
     # RPMS
     local rpm
     for rpm in kubelet kubectl kubeadm cri-o kubernetes-cni; do
