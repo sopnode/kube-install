@@ -312,8 +312,6 @@ function -log-line() {
 
 # run one of thoses tests repetitively
 # store stats in a file named ~/TESTS.csv
-# with a format like this
-# test_function;LOCALHOSTNAME;FITNODE;SUCCESS;DATE;kubeadmRPMINFO
 function -run-n-times() {
     local test_function="$1"; shift
     local count="$1"; shift
