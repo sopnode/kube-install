@@ -12,6 +12,9 @@ KIDIR=$(dirname $(readlink -f $BASH_SOURCE))
 
 readonly KIDIR
 cd $KIDIR
+function kigit() {
+    git -C $KIDIR "$@"
+}
 
 create-doc-category install "commands to make the node ready"
 create-doc-category kube "commands to manage the kube cluster"
@@ -774,30 +777,33 @@ function show-all() {
 }
 
 
-doc-inspect version "display git hash for $0"
-function version() {
-    echo $(git "$@" rev-parse --abbrev-ref HEAD) / $(git -C $KIDIR log HEAD --format=format:%h -1)
-}
-
 doc-inspect pwd "display install folder for $0"
 function pwd() {
     echo $KIDIR
 }
 
+doc-inspect version "display git branch and hash for $0"
+function version() {
+    echo $(kigit "$@" rev-parse --abbrev-ref HEAD) / $(kigit log HEAD --format=format:%h -1)
+}
+doc-inspect sha1 "display git hash for $0"
+function sha1() {
+    kigit log HEAD --format=format:%h -1
+}
+
 doc-install self-update "sync $0 from upstream"
 function self-update() {
-    local kigit="git -C $KIDIR"
-    local remote_branch=$($kigit rev-parse --abbrev-ref --symbolic-full-name @{u})
-    $kigit fetch
-    $kigit reset --hard $remote_branch
+    local remote_branch=$(kigit rev-parse --abbrev-ref --symbolic-full-name @{u})
+    kigit fetch
+    # no pull no merge no bs, right to the point
+    kigit reset --hard $remote_branch
 }
 
 
 doc-install switch-branch "use new branch - typically devel - for $0; will run self-update"
 function switch-branch() {
     local branch="$1"; shift
-    local kigit="git -C $KIDIR"
-    $kigit switch $branch
+    kigit switch $branch
     self-update
 }
 
