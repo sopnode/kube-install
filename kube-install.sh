@@ -548,12 +548,11 @@ function cluster-networking-calico() {
 }
 
 # optional
+doc-kube enable-multus "deploy the multus networking layer for support of multiple interfaces"
 function enable-multus() {
-#    git clone https://github.com/k8snetworkplumbingwg/multus-cni.git && cd multus-cni
-#    cat ./deployments/multus-daemonset-thick-plugin.yml | kubectl apply -f -
+    # the multus-daemonset-crio.yml seems to be more harmful then helpful
     kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
 }
-
 
 function multus-network-attachment() {
     local ifname="$1"; shift
@@ -562,6 +561,7 @@ function multus-network-attachment() {
     export SUBNET_PREFIX=$subnet_prefix
     envsubst < $KIDIR/yaml/multus/network-attachment.yaml.in | kubectl create -f -
 }
+doc-kube multus-network-attachments "create network attachments eth0, data and control (on 10.100.1 and 2 and 3 resp.)"
 function multus-network-attachments() {
     multus-network-attachment eth0 10.100.1
     multus-network-attachment data 10.100.2
@@ -744,13 +744,6 @@ function leave-cluster() {
     -undo-epilogue
 }
 doc-kube leave-cluster "undo join-cluster"
-
-
-function enable-multus() {
-    # the multus-daemonset-crio.yml seems to be more harmful then helpful
-    kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset.yml
-}
-doc-kube enable-multus "deploy the multus networking layer for support of multiple interfaces"
 
 
 doc-inspect show-rpms "list relevant rpms"
