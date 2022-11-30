@@ -7,3 +7,5 @@ yaml/**/*.yaml
 __pycache__
 .ipynb_checkpoints
 .macnb
+archive
+all-in-one-log*
