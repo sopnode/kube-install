@@ -30,7 +30,7 @@ function load-config() {
     local strict="$1"; shift
 
     # default for all
-    export K8S_VERSION=1.24.2
+    export K8S_VERSION=1.25.4
     # this is a dnf module version number, looks like a subversion is not helping
     export CRIO_VERSION=1.24
     # this is only used to install kubectl-calico
@@ -38,7 +38,7 @@ function load-config() {
     # counter-intuitively enough, this is what actually
     # determines the version of the calico components
     # and tigera-operator 1.28.1 installs calico 3.24.1
-    export TIGERA_VERSION=1.28.1
+    export TIGERA_VERSION=1.28.5
 
     if [[ -n "$strict" ]]; then
         # spot the config file for that host
