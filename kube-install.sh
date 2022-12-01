@@ -165,6 +165,7 @@ function install-calico-plugin() {
         local url=https://github.com/projectcalico/calico/releases/download/v${CALICOCTL_VERSION}/calicoctl-linux-amd64
         echo fetching kubectl-calico from $url
         curl -L $url -o /usr/bin/kubectl-calico
+        chmod +x /usr/bin/kubectl-calico
     fi
 
     echo "installed version of kubectl-calico is now $(installed-calico-version)"
