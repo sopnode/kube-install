@@ -5,7 +5,7 @@ this is a set of shell utilities to turn a raw fedora box into a k8s cluster
 see script `tests/all-in-one.sh` that illustrates how to orchestrate the
 deployment of a complete cluster that crosses the sopnode-faraday NAT barrier
 
-*note* this version has support for fedora35 only.
+*note* this version has support for fedora 37 only
 
 ## set up
 
