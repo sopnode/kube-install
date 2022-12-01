@@ -2,6 +2,7 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-hidden,-heading_collapsed,-run_control,-trusted
+#     custom_cell_magics: kql
 #     notebook_metadata_filter: all, -jupytext.text_representation.jupytext_version,
 #       -jupytext.text_representation.format_version, -language_info.version, -language_info.codemirror_mode.version,
 #       -language_info.codemirror_mode, -language_info.file_extension, -language_info.mimetype,
@@ -10,13 +11,16 @@
 #       extension: .py
 #       format_name: percent
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3.10.4 ('flotpython-slides')
 #     language: python
 #     name: python3
 #   language_info:
 #     name: python
 #     nbconvert_exporter: python
 #     pygments_lexer: ipython3
+#   vscode:
+#     interpreter:
+#       hash: 2c5acde70743026b7d4bd447c0a76a3953a1c6df92ec79d7095188ce283b4c39
 # ---
 
 # %% [markdown]
@@ -120,21 +124,21 @@ df1, df2 = postprocess.show_file(latest)
 # %% [markdown]
 # ## specific focus
 
-# %%
-here we are interested in a series of 4 consecutive runs
-
-# %%
-from pathlib import Path
-df1_df2_s = [postprocess.show_file(csv) for csv in Path('.').glob("SUMMARY-dev-09-25-10*.csv")]
-
 # %% [markdown]
-# ## zooming in
+# here we are interested in a series of 4 consecutive runs
+
+# %%
+# from pathlib import Path
+# df1_df2_s = [postprocess.show_file(csv) for csv in Path('.').glob("SUMMARY-dev-09-25-10*.csv")]
 
 # %%
 # consolidate
 df1 = pd.concat([df1 for df1, df2 in df1_df2_s])
 df2 = pd.concat([df2 for df1, df2 in df1_df2_s])
 
+
+# %% [markdown]
+# ## zooming in
 
 # %% [markdown]
 # ### summary from df1

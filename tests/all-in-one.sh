@@ -23,7 +23,7 @@
 # (*) or a function defined in ../bash-utils/sopnode-tests.sh
 #     that gets shipped on the nodes as well
 
-S=inria_sopnode
+SLICE=inria_sopnode
 RLOAD=""
 RUNS=3
 PERIOD=2
@@ -36,7 +36,7 @@ WITH_FIT=true
 FITNODE=
 LEADER=
 WORKER=
-PROD=
+PRESET=dev
 # shortcuts root@ on each box
 L=
 W=
@@ -98,7 +98,7 @@ set-fitnode2 2
 
 function check-config() {
     echo "----"
-    echo S=$S
+    echo SLICE=$SLICE
     echo "----"
     if [[ -n "$RLOAD" ]]; then
         echo IMAGE=$IMAGE
@@ -119,8 +119,8 @@ function check-config() {
 
 function load-image() {
     set -e
-    ssh $S@faraday.inria.fr rhubarbe load -i $IMAGE $FITNODE $FITNODE2
-    ssh $S@faraday.inria.fr rhubarbe wait $FITNODE $FITNODE2
+    ssh $SLICE@faraday.inria.fr rhubarbe load -i $IMAGE $FITNODE $FITNODE2
+    ssh $SLICE@faraday.inria.fr rhubarbe wait $FITNODE $FITNODE2
     set +e
 }
 
@@ -186,9 +186,7 @@ function tests() {
 }
 
 function gather() {
-    local msg=dev
-    [[ -n $PROD ]] && msg=prod
-    SUMMARY="SUMMARY-${msg}-$(date +%m-%d-%H-%M).csv"
+    SUMMARY="SUMMARY-${PRESET}-$(date +%m-%d-%H-%M).csv"
     rm -f $SUMMARY
 
     for h in $L $W $F $F2; do
@@ -273,7 +271,7 @@ function usage() {
     echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "  -w: (no-worker) do not use any worker node on the wired side"
     echo "  -0: (0 radio) do not use any FIT node"
-    echo "  -s slicename - default is $S"
+    echo "  -s slicename - default is $SLICE"
     echo "  -y: do not check-config"
     echo "subcommand 'setup' to rebuild everything - use -l if rload is needed"
     echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
@@ -281,10 +279,25 @@ function usage() {
     exit 1
 }
 
+function preset-dev() {
+    set-leader w2
+    set-worker w3
+}
+
+function preset-prod() {
+    set-leader l1
+    set-worker w1
+}
+
+function preset-w1-leader() {
+    set-leader w1
+    set-worker ""
+}
+
 main() {
     set-fitnode 1
     set-fitnode2 2
-    while getopts "f:F:li:r:p:ow0s:y" opt; do
+    while getopts "f:F:li:r:p:P:ow0s:y" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
@@ -292,17 +305,20 @@ main() {
             i) IMAGE=$OPTARG;;
             r) RUNS=$OPTARG;;
             p) PERIOD=$OPTARG;;
-            o) set-leader l1; set-worker w1; PROD=true;;
+            P) PRESET=$OPTARG;;
             w) WITH_WORKER="";;
             0) WITH_FIT="";;
-            s) S=$OPTARG;;
+            s) SLICE=$OPTARG;;
             y) YES=true;;
             \?) usage ;;
         esac
     done
     shift $(($OPTIND - 1))
 
-    [[ -n "$WITH_WORKER" ]] || set-worker
+    local preset_func=preset-$PRESET
+    type $preset_func || { echo unknown preset $PRESET -- exiting; exit 1; }
+    # call the preset to perform relevant init
+    $preset_func
     [[ -n "$WITH_FIT" ]] || { set-fitnode; set-fitnode2; }
 
     [[ -n "$YES" ]] || check-config
