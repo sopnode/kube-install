@@ -34,7 +34,7 @@ function load-config() {
     # this is a dnf module version number, looks like a subversion is not helping
     export CRIO_VERSION=1.24
     # this is only used to install kubectl-calico
-    export CALICOCTL_VERSION=3.24.1
+    export CALICOCTL_VERSION=3.24.5
     # counter-intuitively enough, this is what actually
     # determines the version of the calico components
     # and tigera-operator 1.28.1 installs calico 3.24.1
