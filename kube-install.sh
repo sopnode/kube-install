@@ -802,7 +802,13 @@ function switch-branch() {
 }
 
 
-doc-kube testpod "create a local testpod"
+doc-inspect build-testpod "build the testpod images"
+function build-testpod() {
+    cd $KIDIR/tests/testpod
+    ./build.sh
+}
+
+doc-inspect testpod "create a local testpod"
 function testpod() {
     cd $KIDIR/tests/testpod
     ./testpod.sh -f
