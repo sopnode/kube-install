@@ -268,7 +268,7 @@ function usage() {
     echo "  -i kubernetes-f36: use that (faraday) image (default=$IMAGE)"
     echo "  -r 10: repeat the test 10 times (default=$RUNS)"
     echo "  -p 3: wait for 3 seconds between each run (default=$PERIOD)"
-    echo "  -o: (prod) use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
+    echo "  -P prod: use sopnode-l1 + sopnode-w1 (default=$LEADER $WORKER)"
     echo "  -w: (no-worker) do not use any worker node on the wired side"
     echo "  -0: (0 radio) do not use any FIT node"
     echo "  -s slicename - default is $SLICE"
@@ -297,7 +297,7 @@ function preset-w1-leader() {
 main() {
     set-fitnode 1
     set-fitnode2 2
-    while getopts "f:F:li:r:p:P:ow0s:y" opt; do
+    while getopts "f:F:li:r:p:P:w0s:y" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
@@ -316,7 +316,7 @@ main() {
     shift $(($OPTIND - 1))
 
     local preset_func=preset-$PRESET
-    type $preset_func || { echo unknown preset $PRESET -- exiting; exit 1; }
+    type $preset_func >& /dev/null || { echo unknown preset $PRESET -- exiting; exit 1; }
     # call the preset to perform relevant init
     $preset_func
     [[ -n "$WITH_FIT" ]] || { set-fitnode; set-fitnode2; }
