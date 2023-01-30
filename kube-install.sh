@@ -86,6 +86,9 @@ function prepare() {
 
     touch /etc/systemd/zram-generator.conf
     swapoff -a
+    # seen on w1 after a reinstall; so just in case, comment off
+    # lines in /etc/fstab that have a swap entry
+    sed -i.bak -e 's/^\([^#].*[ \t]swap[ \t].*\)/#\1/' /etc/fstab
 
     cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
