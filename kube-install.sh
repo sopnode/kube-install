@@ -82,13 +82,30 @@ function load-config() {
 
 
 # all nodes
-function prepare() {
+function turn-off-swap() {
 
-    touch /etc/systemd/zram-generator.conf
+    # turn off swap in this session
     swapoff -a
+
+    # remove fstab swap entries
     # seen on w1 after a reinstall; so just in case, comment off
     # lines in /etc/fstab that have a swap entry
     sed -i.bak -e 's/^\([^#].*[ \t]swap[ \t].*\)/#\1/' /etc/fstab
+
+    # this is to turn off the effects of the zram generator
+    # as installed by the zram-generator-defaults rpm
+    touch /etc/systemd/zram-generator.conf
+
+    # this is to silence the systemd swap.target
+    # that is able to spot swap devices even when not in /etc/fstab
+    # (it would create units like dev-sda2.swap when enabled)
+    systemctl mask swap.target
+
+}
+
+function prepare() {
+
+    turn-off-swap
 
     cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
