@@ -14,7 +14,7 @@ export _GO_NODESTATUS='{{range .items}}{{.metadata.name}}:{{range .status.condit
 alias k-alives='kubectl get nodes -o go-template --template "$_GO_NODESTATUS" | grep "Ready=True" | cut -d: -f1'
 alias k-deads='kubectl get nodes -o go-template --template "$_GO_NODESTATUS" | grep -v "Ready=True" | cut -d: -f1'
 
-function calicoctl() { 
+function calicoctl() {
     local function="$1"; shift
     kubectl-calico $function --allow-version-mismatch "$@"
 }
@@ -161,3 +161,26 @@ function crictl-id-from-name() {
     crictl ps --name $name -o yaml | yq .containers[0].id
 }
 alias cid=crictl-id-from-name
+
+###
+# tuning the cpupower environment (BIOS & kernel command line)
+function watch-power() {
+    watch -c "$@" cpupower monitor
+}
+function watch-scaling() {
+    watch -c "$@" python /root/scaling-freqs.py
+}
+
+function get-governor() {
+    cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor | uniq -c
+}
+function -set-governor() {
+    local newgov="$1"; shift
+    echo $newgov | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+}
+function governor-performance() {
+    -set-governor performance
+}
+function governor-powersave() {
+    -set-governor powersave
+}
