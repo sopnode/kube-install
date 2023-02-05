@@ -37,9 +37,9 @@ function load-config() {
     # dnf module list cri-o
 
     # default for all
-    export K8S_VERSION=1.25.4
+    export K8S_VERSION=1.26.1
     # this is a dnf module version number, looks like a subversion is not helping
-    export CRIO_VERSION=1.24
+    export CRIO_VERSION=1.25
     # this is only used to install kubectl-calico
     export CALICOCTL_VERSION=3.24.5
     # counter-intuitively enough, this is what actually
