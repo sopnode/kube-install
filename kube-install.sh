@@ -263,6 +263,8 @@ EOF
 
     echo using kube version $K8S_VERSION and cri-o version $CRIO_VERSION
 
+    # when upgrading, it's best to first reset the module
+    dnf -y module reset cri-o
     dnf -y --disableexcludes=kubernetes install kubelet-$K8S_VERSION kubeadm-$K8S_VERSION kubectl-$K8S_VERSION
     dnf -y install kubernetes-cni
 
