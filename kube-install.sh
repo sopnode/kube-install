@@ -29,6 +29,13 @@ readonly USER=r2lab
 function load-config() {
     local strict="$1"; shift
 
+    # K8S_VERSION and CRIO_VERSION defined in the configs/ file
+    # for determining the available options:
+    # K8S_VERSION: use
+    # dnf --showduplicates list kubelet --disableexcludes=kubernetes
+    # CRIO_VERSION: use
+    # dnf module list cri-o
+
     # default for all
     export K8S_VERSION=1.25.4
     # this is a dnf module version number, looks like a subversion is not helping
@@ -248,11 +255,6 @@ EOF
     # Set SELinux in permissive mode (effectively disabling it)
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-
-    # K8S_VERSION and CRIO_VERSION defined in the configs/ file
-    # for determining the available options:
-    # K8S_VERSION: use dnf --showduplicates list kubelet --disableexcludes=kubernetes
-    # CRIO_VERSION: use dnf module list cri-o
 
     [[ -z "$K8S_VERSION" || -z "$K8S_VERSION" ]] && {
         echo need to define K8S_VERSION and K8S_VERSION
