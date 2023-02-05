@@ -223,7 +223,7 @@ function uninstall-helm-alt() {
 }
 
 function install-helm() {
-    dnf install -y helm
+    dnf -y install helm
 }
 doc-install install-helm "install helm"
 
