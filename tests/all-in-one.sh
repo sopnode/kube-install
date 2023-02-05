@@ -139,7 +139,7 @@ function -map-all() {
 
 function self-update() {
     -map-some self-update $L $W
-    -map-some "switch-branch devel" $F $F2
+#    -map-some "switch-branch devel" $F $F2
     -map-some self-update $F $F2
 }
 
