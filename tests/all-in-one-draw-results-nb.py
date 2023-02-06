@@ -11,7 +11,7 @@
 #       extension: .py
 #       format_name: percent
 #   kernelspec:
-#     display_name: Python 3.10.4 ('flotpython-slides')
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 #   language_info:
@@ -133,8 +133,8 @@ df1, df2 = postprocess.show_file(latest)
 
 # %%
 # consolidate
-df1 = pd.concat([df1 for df1, df2 in df1_df2_s])
-df2 = pd.concat([df2 for df1, df2 in df1_df2_s])
+#df1 = pd.concat([df1 for df1, df2 in df1_df2_s])
+#df2 = pd.concat([df2 for df1, df2 in df1_df2_s])
 
 
 # %% [markdown]
