@@ -163,16 +163,18 @@ function test-tunnel() {
     id=$(sed -e s/fit// <<< $id)
     id=$(expr "$id")
     local zid=$(printf %02d $id)
-    p1v 192.168.3.$id "fit${zid} on 192.168.3.$id (must work)"
-    p1v 192.168.2.$id "data${zid} on 192.168.2.$id (may fail on some nodes)"
     p1v 138.96.16.97 faraday-pub
     p1v 192.168.3.100 faraday-priv
-    p1v 138.96.16.109 faraday-tun
+    p1v 138.96.16.109 "faraday-tun (may not work from outside of tunnel)"
     p1v 138.96.245.50 sopnode-l1-pub
     p1v 138.96.245.249 sopnode-l1-tun
     p1v 138.96.245.51 sopnode-w1
     p1v 138.96.245.52 sopnode-w2
     p1v 138.96.245.53 sopnode-w3
+    p1v 138.96.245.30 sopnode-pdu-bas
+    echo "assuming fit01 is turned ON"
+    p1v 192.168.3.$id "fit${zid} on 192.168.3.$id (must work)"
+    p1v 192.168.2.$id "data${zid} on 192.168.2.$id (may fail on some nodes)"
 }
 
 for subcommand in "$@"; do
