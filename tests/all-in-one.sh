@@ -36,6 +36,7 @@ WITH_FIT=true
 FITNODE=
 LEADER=
 WORKER=
+BRANCH=
 PRESET=dev
 # shortcuts root@ on each box
 L=
@@ -110,6 +111,7 @@ function check-config() {
     echo WORKER=$WORKER
     echo FITNODE=$FITNODE
     echo FITNODE2=$FITNODE2
+    [[ -n "$BRANCH" ]] && echo "BRANCH=$BRANCH" "(will switch on fit nodes only)"
     echo "----"
     echo RUNS=$RUNS
     echo PERIOD=$PERIOD
@@ -139,7 +141,7 @@ function -map-all() {
 
 function self-update() {
     -map-some self-update $L $W
-#    -map-some "switch-branch devel" $F $F2
+    [[ -n "$BRANCH" ]] && -map-some "switch-branch $BRANCH" $F $F2
     -map-some self-update $F $F2
 }
 
@@ -276,6 +278,7 @@ function usage() {
     echo "  -w: (no-worker) do not use any worker node on the wired side"
     echo "  -0: (0 radio) do not use any FIT node"
     echo "  -s slicename - default is $SLICE"
+    echo "  -b branchname - does switch-branch on the FIT nodes before testing"
     echo "  -y: do not check-config"
     echo "subcommand 'setup' to rebuild everything - use -l if rload is needed"
     echo "subcommand 'run' to run the tests - after that use notebook draw-results-nb to visualize"
@@ -301,7 +304,7 @@ function preset-w1-leader() {
 main() {
     set-fitnode 1
     set-fitnode2 2
-    while getopts "f:F:li:r:p:P:w0s:y" opt; do
+    while getopts "f:F:li:r:p:P:w0s:b:y" opt; do
         case $opt in
             f) set-fitnode $OPTARG;;
             F) set-fitnode2 $OPTARG;;
@@ -313,6 +316,7 @@ main() {
             w) WITH_WORKER="";;
             0) WITH_FIT="";;
             s) SLICE=$OPTARG;;
+            b) BRANCH=$OPTARG;;
             y) YES=true;;
             \?) usage ;;
         esac
