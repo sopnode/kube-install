@@ -166,6 +166,7 @@ function multus-network-attachments() {
     -map-some multus-network-attachments $L
 }
 
+function build-testpods() { -map-all build-testpod; }
 function testpods() { -map-all testpod; }
 function testpods2() { -map-all testpod2; }
 function testpods-multus() { -map-all testpod-multus; }
@@ -211,7 +212,10 @@ function -steps() {
 }
 
 function setup() {
-    local steps="self-update versions leave destroy create join enable-multus multus-network-attachments testpods testpods2 testpods-multus"
+    local steps="
+self-update versions leave destroy create join
+enable-multus multus-network-attachments
+build-testpods testpods testpods2 testpods-multus"
     [[ -n "$RLOAD" ]] && { steps="load-image $steps"; }
     -steps $steps
 }

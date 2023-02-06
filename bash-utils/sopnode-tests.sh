@@ -83,8 +83,8 @@ function all-pods() {
 
 
 # kick the test pod on each of the 3 nodes
-function trash-testpods() {
-    local pods=$(kubectl get pod -o yaml | yq ".items[].metadata.name")
+function trash-pods-in-default-namespace() {
+    local pods=$(kubectl get pod -n default -o yaml | yq ".items[].metadata.name")
     local pod
     for pod in $pods; do
         kubectl delete pod $pod &
