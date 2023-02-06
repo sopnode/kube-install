@@ -275,7 +275,7 @@ function check-multus() {
     local pod=$(local-multus-pod)
     local ifname=net1
     local P="====== $hostname: checking for $ifname in $pod -> "
-    command="kubectl exec -n default $pod ip add show $ifname"
+    command="kubectl exec -n default $pod -- ip add show $ifname"
     echo $command
     local success=OK
     $command
