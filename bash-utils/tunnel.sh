@@ -59,10 +59,13 @@ function create-routing-table() {
     grep -q "$name" /etc/iproute2/rt_tables >& /dev/null || echo "$id $name" >> /etc/iproute2/rt_tables
 }
 
+# 138.96.16.109  is aka faraday-tun.inria.fr
+# 138.96.245.249 is aka sopnode-tun.inria.fr
+
 function join-tunnel-faraday() {
     # ip/ip tunnel interface
     ip link add r2lab-sopnode type ipip local 138.96.16.97 remote 138.96.245.50
-    ip addr add 10.3.1.3/24 dev r2lab-sopnode
+    ip addr add 138.96.16.109/28 dev r2lab-sopnode
     ip link set dev r2lab-sopnode up
 
     # routing; need to resort to source routing
@@ -83,6 +86,9 @@ function join-tunnel-faraday() {
     # except for sopnode-l1 of course, that needs to go through
     # the default route because otherwise the tunnel cannot work !
     ip route add 138.96.245.50/32 via 138.96.16.110 dev internet
+    # this route seems a side effect of turning on r2lab-sopnode
+    # and is most unfortunate; remove, (and just ignore it if it's not here)
+    ip route del 138.96.16.96/28 dev r2lab-sopnode >& /dev/null
 }
 function leave-tunnel-faraday() {
     ip route del 138.96.245.50/32 via 138.96.16.110 dev internet
@@ -99,14 +105,17 @@ function leave-tunnel-faraday() {
 function join-tunnel-l1() {
     # ip/ip tunnel interface
     ip link add r2lab-sopnode type ipip local 138.96.245.50 remote 138.96.16.97
-    ip addr add 10.3.1.2/24 dev r2lab-sopnode
+    ip addr add 138.96.245.249/24 dev r2lab-sopnode
     ip link set dev r2lab-sopnode up
 
-    # routing
+    # routing - the whole point so we can reach the fit nodes
     ip route add 192.168.3.0/24 dev r2lab-sopnode
     ip route add 192.168.2.0/24 dev r2lab-sopnode
-    # same on this side
-    ip route add 138.96.16.97 via 138.96.245.250 dev eth0
+
+    # packets that go back to faraday go on r2lab-sopnode
+    ip route add 138.96.16.97/32 via 138.96.245.250 dev eth0
+    # likewise this route is spurrious and it must go
+    ip route del 138.96.245.0/24 dev r2lab-sopnode >& /dev/null
 }
 function leave-tunnel-l1() {
     ip route del 138.96.16.97 via 138.96.245.250 dev eth0
@@ -116,11 +125,9 @@ function leave-tunnel-l1() {
 function join-tunnel-fit() {
     # the FIT side
     ip route add 138.96.245.0/24 dev control via 192.168.3.100
-    ip route add 10.3.1.0/24 dev control via 192.168.3.100
 }
 function leave-tunnel-fit() {
     ip route del 138.96.245.0/24 dev control via 192.168.3.100
-    ip route del 10.3.1.0/24 dev control via 192.168.3.100
 }
 
 function join-tunnel-sopnode() {
@@ -128,15 +135,12 @@ function join-tunnel-sopnode() {
     # the other side network
     ip route add 192.168.3.0/24 dev eth0 via 138.96.245.50
     ip route add 192.168.2.0/24 dev eth0 via 138.96.245.50
-    # the tunnel
-    ip route add 10.3.1.0/24 dev eth0 via 138.96.245.50
     # faraday, otherwise it goes through the usual gateway
     ip route add 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
 function leave-tunnel-sopnode() {
     ip route del 192.168.3.0/24 dev eth0 via 138.96.245.50
     ip route del 192.168.2.0/24 dev eth0 via 138.96.245.50
-    ip route del 10.3.1.0/24 dev eth0 via 138.96.245.50
     ip route del 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
 
@@ -163,9 +167,9 @@ function test-tunnel() {
     p1v 192.168.2.$id "data${zid} on 192.168.2.$id (may fail on some nodes)"
     p1v 138.96.16.97 faraday-pub
     p1v 192.168.3.100 faraday-priv
-#    p1v 10.3.1.3 faraday-tun
+    p1v 138.96.16.109 faraday-tun
     p1v 138.96.245.50 sopnode-l1-pub
-#    p1v 10.3.1.2 sopnode-l1-tun
+    p1v 138.96.245.249 sopnode-l1-tun
     p1v 138.96.245.51 sopnode-w1
     p1v 138.96.245.52 sopnode-w2
     p1v 138.96.245.53 sopnode-w3
