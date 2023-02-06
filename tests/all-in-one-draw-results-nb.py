@@ -144,6 +144,9 @@ df1, df2 = postprocess.show_file(latest)
 # ### summary from df1
 
 # %%
+df1[~df1.success]
+
+# %%
 # http individually
 all_https = df1[df1.test == 'check-http']
 https = all_https.rename(columns={'success': 'http'}).pivot_table('http', columns='from')
