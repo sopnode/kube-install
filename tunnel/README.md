@@ -23,17 +23,18 @@
 I have tried for some long weeks to get a worker node to smoothly join a k8s
 cluster from behind a NAT; at first it looked something reasonably achievable,
 because
+
 * it looks like a pretty standard use case
 * the existence of a tool name `konnectivity` was very promising
 
 But to no avail so far. I did deploy konnectivity, and most of the control plane
 worked just fine actually; however:
+
 * some pieces of the control plane (like notably `kubectl exec`) exhibited an
   odd behaviour
 * the data plane was not working at all, because the various tunnels created by
   `calico` required un underlying connectivity, that was missing because of the
   NAT
-
 
 ## ideas
 
@@ -76,7 +77,6 @@ Thanks to the following archtecture
 with faraday is static; even when running a dev k8s cluster with, say,
 `sopnode-w2` as the master, it is **always `sopnode-l1`** that runs the tunnel.
 
-
 ![](tunnel-arch.svg)
 
 ## implementation
@@ -97,20 +97,21 @@ cumbersome and not working, so let's keep it as simple as it gets:
 
 ## configuration and usage
 
-the code for joining is in `tunnel.sh`  
+the code for joining is in `tunnel.sh`
 
 ### wired nodes
 plan is to have the permanent/wired boxes (faraday+sopnode*) eventually do that
 at boot-time using a systemd service named `sopnode-tunnel` (*ongoing..*)
 
 ### FIT nodes
-mostly fit nodes will need to call `join-tunnel` before joining the cluster  
+mostly fit nodes will need to call `join-tunnel` before joining the cluster
 
-the command is located in `kube-install/bash-utils/tunnel.sh`
-
+the command is located in `kube-install/bash-utils/tunnel.sh`  
 2 ways to call this:
+
 * interactively: first invoke the `ki-utils` alias beforehand
 * or load `/root/kube-install/bash-utils/loader.sh`
+
 
 as an example, see `tests/all-in-one.sh` to see how the tests activate this command
 
