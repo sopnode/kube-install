@@ -138,12 +138,14 @@ function join-tunnel-sopnode() {
     ip route add 192.168.3.0/24 dev eth0 via 138.96.245.50
     ip route add 192.168.2.0/24 dev eth0 via 138.96.245.50
     # faraday, otherwise it goes through the usual gateway
-    ip route add 138.96.16.97/32 dev eth0 via 138.96.245.50
+    # no longer needed with newtunnel
+    #ip route add 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
 function leave-tunnel-sopnode() {
     ip route del 192.168.3.0/24 dev eth0 via 138.96.245.50
     ip route del 192.168.2.0/24 dev eth0 via 138.96.245.50
-    ip route del 138.96.16.97/32 dev eth0 via 138.96.245.50
+    # no longer needed with newtunnel
+    # ip route del 138.96.16.97/32 dev eth0 via 138.96.245.50
 }
 
 
