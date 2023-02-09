@@ -93,11 +93,18 @@ def draw_df2(df2, ulax, urax, llax, lrax):
     lrax.set_ylim((0, 1))
 
     ul.groupby('test').mean().plot.bar(ax=ulax)
-    ll.groupby('test').mean().plot.bar(ax=llax)
+    # allow missing pieces (like no fit node or no worker node)
+    try:
+        ll.groupby('test').mean().plot.bar(ax=llax)
+    except IndexError:
+        pass
     try:
         ur.groupby('test').mean().plot.bar(ax=urax)
+    except IndexError:
+        pass
+    try:
         lr.groupby('test').mean().plot.bar(ax=lrax)
-    except:
+    except IndexError:
         pass
 
 def display_df_version(df_version):
