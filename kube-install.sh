@@ -40,12 +40,11 @@ function load-config() {
     export K8S_VERSION=1.26.1
     # this is a dnf module version number, looks like a subversion is not helping
     export CRIO_VERSION=1.25
+    # 2023-feb-09 it seems like now we get to choose our calico version
+    # instead of having to pick a tigera version
+    export CALICO_VERSION=3.25.0
     # this is only used to install kubectl-calico
-    export CALICOCTL_VERSION=3.24.5
-    # counter-intuitively enough, this is what actually
-    # determines the version of the calico components
-    # and tigera-operator 1.28.1 installs calico 3.24.1
-    export TIGERA_VERSION=1.28.5
+    export CALICOCTL_VERSION=${CALICO_VERSION}
 
     if [[ -n "$strict" ]]; then
         # spot the config file for that host
@@ -527,13 +526,11 @@ function cluster-networking() {
 }
 
 function cluster-networking-calico() {
-    # this is the location where to get the latest file at a given point in time
-    # to know the version in there, just grep for tigera/operator
-    # kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-    kubectl create -f $KIDIR/yaml/tigera-operator-${TIGERA_VERSION}.yaml
+    # see https://docs.tigera.io/calico/3.25/getting-started/kubernetes/self-managed-onprem/onpremises
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/tigera-operator.yaml
     # download before patching
     local calico_settings=/etc/kubernetes/calico-settings.yaml
-    curl -o $calico_settings https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
+    curl -o ${calico_settings} https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/custom-resources.yaml
     # the calico settings come with 2 sections
     # change only in one location and not in the API server section
     yq --inplace \
