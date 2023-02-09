@@ -114,6 +114,8 @@ function join-tunnel-l1() {
 
     # packets that go back to faraday go on r2lab-sopnode
     ip route add 138.96.16.97/32 via 138.96.245.250 dev eth0
+    # make sure the return packets flow through the tunnel
+    ip route add 138.96.16.109/32 dev r2lab-sopnode
     # likewise this route is spurrious and it must go
     ip route del 138.96.245.0/24 dev r2lab-sopnode >& /dev/null
 }
