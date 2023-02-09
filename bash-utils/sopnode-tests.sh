@@ -360,11 +360,6 @@ function log-rpm-versions() {
                            | yq '.spec.containers[0].image' \
                            | cut -d: -f2)
     -log-line version ${host_s} calico ${calico_version}
-    # TIGERA RELEASE (all nodes report the same)
-    local tigera_version=$(kubectl get pod -n tigera-operator -o yaml \
-                           | yq '.items[0].spec.containers[0].image' \
-                           | cut -d: -f2)
-    -log-line version ${host_s} tigera ${tigera_version}
     # FIT NODES: the rhubarbe image
     if [ -f /etc/rhubarbe-image ]; then
         local rhubarbe=$(tail -1 /etc/rhubarbe-image | cut -d' ' -f 8)
