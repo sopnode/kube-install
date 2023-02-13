@@ -111,7 +111,11 @@ function check-config() {
     echo WORKER=$WORKER
     echo FITNODE=$FITNODE
     echo FITNODE2=$FITNODE2
-    [[ -n "$BRANCH" ]] && echo "BRANCH=$BRANCH" "(will switch on fit nodes only)"
+    if [[ -n "$BRANCH" ]]; then
+        echo "BRANCH=$BRANCH" "(will switch on fit nodes only)"
+    else:
+        echo "BRANCH not set: using the branch as defined in the node image"
+    fi
     echo "----"
     echo RUNS=$RUNS
     echo PERIOD=$PERIOD
