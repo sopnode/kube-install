@@ -36,8 +36,11 @@ function load-config() {
     # CRIO_VERSION: use
     # dnf module list cri-o
 
-    # default for all
-    export K8S_VERSION=1.26.1
+    # defaults
+    [[ -f /etc/fedora-release ]] && export K8S_VERSION=1.26.1
+    # to figure out the available versions (once the repo is active) do e.g.
+    # apt-cache policy kubeadm | grep 1.26
+    [[ -f /etc/lsb-release ]] && export K8S_VERSION=1.26.0-00
     # this is a dnf module version number, looks like a subversion is not helping
     export CRIO_VERSION=1.25
     # 2023-feb-09 it seems like now we get to choose our calico version
@@ -208,38 +211,41 @@ doc-install install-extras "useful tools"
 
 
 # all nodes
-# this is the recommended way, but does not offer an easy update path
-# so now that we focus on fedora, we'll use dnf instead
-function install-helm-alt() {
-    cd
-    [ -f /etc/fedora-release ] && dnf -y install openssl
-    curl -fsSL -o install-helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-    bash install-helm.sh
-    helm version
+function install-helm-fedora() {
+    dnf -y install helm
 }
-function uninstall-helm-alt() {
-    rm -f /usr/local/bin/helm
+function install-helm-ubuntu() {
+    curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
+    sudo apt -y install apt-transport-https
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+    apt update
+    apt -y install helm
 }
 
 function install-helm() {
-    dnf -y install helm
+    [[ -f /etc/fedora-release ]] && install-helm-fedora
+    [[ -f /etc/lsb-release ]] && install-helm-ubuntu
 }
 doc-install install-helm "install helm"
 
 
 # all nodes
 function install-k8s() {
-    [ -f /etc/fedora-release ] || {
-        $BASH_SOURCE is for fedora only
-        exit 1
-    }
     load-config
-    fedora-install-k8s
+    if [[ -f /etc/fedora-release ]]; then
+        install-k8s-fedora
+    elif [[ -f /etc/lsb-release ]]; then
+        install-k8s-ubuntu
+    else
+        $BASH_SOURCE is for fedora or ubuntu only
+        exit 1
+    fi
     fetch-kube-images
 }
 doc-install install-k8s "install kubernetes core + images"
 
-function fedora-install-k8s() {
+
+function install-k8s-fedora() {
     cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -255,28 +261,45 @@ EOF
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
-    [[ -z "$K8S_VERSION" || -z "$K8S_VERSION" ]] && {
-        echo need to define K8S_VERSION and K8S_VERSION
+    [[ -z "${K8S_VERSION}" ]] && {
+        echo need to define K8S_VERSION 
         exit 1
     }
 
-    echo using kube version $K8S_VERSION and cri-o version $CRIO_VERSION
+    echo using kube version ${K8S_VERSION} and cri-o version ${CRIO_VERSION}
 
     # when upgrading, it's best to first reset the module
     dnf -y module reset cri-o
-    dnf -y --disableexcludes=kubernetes install kubelet-$K8S_VERSION kubeadm-$K8S_VERSION kubectl-$K8S_VERSION
+    dnf -y --disableexcludes=kubernetes install kubelet-${K8S_VERSION} kubeadm-${K8S_VERSION} kubectl-${K8S_VERSION}
     dnf -y install kubernetes-cni
 
     # too early !
     # systemctl enable --now kubelet
 
-    dnf -y --disableexcludes=kubernetes module enable cri-o:$CRIO_VERSION
+    dnf -y --disableexcludes=kubernetes module enable cri-o:${CRIO_VERSION}
     dnf -y --disableexcludes=kubernetes install cri-o
     # this is required in case we are upgrading
     dnf -y update
 
     systemctl daemon-reload
     systemctl enable --now crio
+}
+
+
+function install-k8s-ubuntu() {
+
+    # the key for the repo
+    apt -y install curl
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+
+    # from https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+    # apparently this always xenial, it does not depend on the ubuntu version
+    #source /etc/lsb-release
+    apt-add-repository -y "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+
+    # install and pin
+    apt -y install kubeadm=${K8S_VERSION} kubelet=${K8S_VERSION} kubectl=${K8S_VERSION}
+    apt-mark hold kubeadm kubelet kubectl
 }
 
 
