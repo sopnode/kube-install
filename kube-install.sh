@@ -878,7 +878,8 @@ function self-update() {
 doc-install switch-branch "use new branch - typically devel - for $0; will run self-update"
 function switch-branch() {
     local branch="$1"; shift
-    kigit switch $branch
+    # old versions of git do not have switch
+    kigit switch $branch || kigit checkout $branch
     self-update
 }
 
