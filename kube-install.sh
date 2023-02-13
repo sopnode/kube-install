@@ -308,8 +308,7 @@ function install-calico-plugin() {
 function install-extras() {
     # kernel-tools is for cpupower
     [ -f /etc/fedora-release ] && dnf -y install git openssl netcat jq buildah kernel-tools inxi
-    [ -f /etc/lsb-release ]    && apt -y install git openssl netcat # jq
-
+    [ -f /etc/lsb-release ]    && apt -y install git openssl netcat jq buildah
 }
 doc-install install-extras "useful tools"
 

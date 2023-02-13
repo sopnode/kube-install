@@ -113,7 +113,7 @@ function check-config() {
     echo FITNODE2=$FITNODE2
     if [[ -n "$BRANCH" ]]; then
         echo "BRANCH=$BRANCH" "(will switch on fit nodes only)"
-    else:
+    else
         echo "BRANCH not set: using the branch as defined in the node image"
     fi
     echo "----"
@@ -188,7 +188,7 @@ function tests() {
 
     for h in $L $W $F $F2; do
         echo "running $RUNS tests every $PERIOD s on $h"
-        ssh $h "clear-logs; set-leader $LEADER; set-worker $WORKER; set-fitnode $FITNODE; set-fitnode2 $FITNODE2; run-all $RUNS $PERIOD; log-rpm-versions"
+        ssh $h "clear-logs; set-leader $LEADER; set-worker $WORKER; set-fitnode $FITNODE; set-fitnode2 $FITNODE2; run-all $RUNS $PERIOD; log-versions"
     done
 }
 

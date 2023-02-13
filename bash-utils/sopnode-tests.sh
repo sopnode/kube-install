@@ -338,7 +338,7 @@ function run-all() {
     -run-n-times check-all $how_many $period
 }
 
-function log-rpm-versions() {
+function log-versions() {
     local host_l=$(hostname)
     local host_s=$(hostname -s)
     # kube-install sha1
@@ -346,12 +346,16 @@ function log-rpm-versions() {
     # RPMS
     local rpm
     for rpm in kubelet kubectl kubeadm cri-o kubernetes-cni; do
-        local version=$(rpm -q --queryformat '%{VERSION}' $rpm)
+        local version
+        [[ -f /etc/fedora-release ]] && version=$(rpm -q --queryformat '%{VERSION}' $rpm)
+        [[ -f /etc/lsb-release ]] && version=$(dpkg-query --showformat='${Version}' --show $rpm)
         -log-line version ${host_s} ${rpm} ${version}
     done
     # FEDORA RELEASE
-    fedora_version=$(cut -d' ' -f3 < /etc/fedora-release)
-    -log-line version ${host_s} fedora $fedora_version
+    local os_version
+    [[ -f /etc/fedora-release ]] && os_version=$(cut -d' ' -f3 < /etc/fedora-release)
+    [[ -f /etc/lsb-release ]] && { source /etc/lsb-release; os_version=${DISTRIB_RELEASE}; }
+    -log-line version ${host_s} fedora ${os_version}
     # CALICO RELEASE
     local calicopod=$(kubectl get pod -n calico-system --field-selector spec.nodeName=${host_l} \
                       | grep calico-node \
