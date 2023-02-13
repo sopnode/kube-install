@@ -151,6 +151,7 @@ function update-os() {
 doc-install update-os "dnf or apt update"
 
 
+
 function install() {
     install-yq
     install-k8s
@@ -160,6 +161,7 @@ function install() {
 }
 doc-install install "meta-target to install k8s, extras and helm"
 
+
 function install-yq() {
     # fedora yq is based on snap which is a pain...
     YQ_VERSION=4.25.1
@@ -167,6 +169,108 @@ function install-yq() {
     curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64
     chmod +x /usr/bin/yq
 }
+
+
+function install-k8s() {
+    load-config
+    if [[ -f /etc/fedora-release ]]; then
+        install-k8s-fedora
+    elif [[ -f /etc/lsb-release ]]; then
+        install-k8s-ubuntu
+    else
+        $BASH_SOURCE is for fedora or ubuntu only
+        exit 1
+    fi
+    fetch-kube-images
+}
+doc-install install-k8s "install kubernetes core + images"
+
+
+function install-k8s-fedora() {
+    cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+exclude=kubelet kubeadm kubectl
+EOF
+
+    # Set SELinux in permissive mode (effectively disabling it)
+    setenforce 0
+    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+    [[ -z "${K8S_VERSION}" ]] && {
+        echo need to define K8S_VERSION 
+        exit 1
+    }
+
+    echo using kube version ${K8S_VERSION} and cri-o version ${CRIO_VERSION}
+
+    # when upgrading, it's best to first reset the module
+    dnf -y module reset cri-o
+    dnf -y --disableexcludes=kubernetes install kubelet-${K8S_VERSION} kubeadm-${K8S_VERSION} kubectl-${K8S_VERSION}
+    dnf -y install kubernetes-cni
+
+    # too early !
+    # systemctl enable --now kubelet
+
+    dnf -y --disableexcludes=kubernetes module enable cri-o:${CRIO_VERSION}
+    dnf -y --disableexcludes=kubernetes install cri-o
+    # this is required in case we are upgrading
+    dnf -y update
+
+    systemctl daemon-reload
+    systemctl enable --now crio
+}
+
+
+function install-k8s-ubuntu() {
+
+    # cri-o
+    source /etc/lsb-release
+    OS=xUbuntu_${DISTRIB_RELEASE}
+
+    # define the repos
+    echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" \
+        |  tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+    echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$CRIO_VERSION/$OS/ /" \
+        | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$CRIO_VERSION.list
+
+    # fetch corresponding keys
+    curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:$VERSION/$OS/Release.key \
+        | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key \
+        | apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+
+    # get updated CAs; this is for older images, otherwise they see the repos certicates
+    # as having expired
+    apt -y install ca-certificates
+
+    apt -y update
+    apt -y install cri-o cri-o-runc cri-tools
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable crio --now
+
+    # k8s per se now
+    # the key for the repo
+    apt -y install curl
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+
+    # from https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+    # apparently this always xenial, it does not depend on the ubuntu version
+    #source /etc/lsb-release
+    apt-add-repository -y "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+
+    # install and pin
+    apt -y install kubeadm=${K8S_VERSION} kubelet=${K8S_VERSION} kubectl=${K8S_VERSION}
+    apt-mark hold kubeadm kubelet kubectl
+
+}
+
 
 function install-calico-plugin() {
     [[ -z "$CALICOCTL_VERSION" ]] && {
@@ -227,80 +331,6 @@ function install-helm() {
     [[ -f /etc/lsb-release ]] && install-helm-ubuntu
 }
 doc-install install-helm "install helm"
-
-
-# all nodes
-function install-k8s() {
-    load-config
-    if [[ -f /etc/fedora-release ]]; then
-        install-k8s-fedora
-    elif [[ -f /etc/lsb-release ]]; then
-        install-k8s-ubuntu
-    else
-        $BASH_SOURCE is for fedora or ubuntu only
-        exit 1
-    fi
-    fetch-kube-images
-}
-doc-install install-k8s "install kubernetes core + images"
-
-
-function install-k8s-fedora() {
-    cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-exclude=kubelet kubeadm kubectl
-EOF
-
-    # Set SELinux in permissive mode (effectively disabling it)
-    setenforce 0
-    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-
-    [[ -z "${K8S_VERSION}" ]] && {
-        echo need to define K8S_VERSION 
-        exit 1
-    }
-
-    echo using kube version ${K8S_VERSION} and cri-o version ${CRIO_VERSION}
-
-    # when upgrading, it's best to first reset the module
-    dnf -y module reset cri-o
-    dnf -y --disableexcludes=kubernetes install kubelet-${K8S_VERSION} kubeadm-${K8S_VERSION} kubectl-${K8S_VERSION}
-    dnf -y install kubernetes-cni
-
-    # too early !
-    # systemctl enable --now kubelet
-
-    dnf -y --disableexcludes=kubernetes module enable cri-o:${CRIO_VERSION}
-    dnf -y --disableexcludes=kubernetes install cri-o
-    # this is required in case we are upgrading
-    dnf -y update
-
-    systemctl daemon-reload
-    systemctl enable --now crio
-}
-
-
-function install-k8s-ubuntu() {
-
-    # the key for the repo
-    apt -y install curl
-    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
-
-    # from https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
-    # apparently this always xenial, it does not depend on the ubuntu version
-    #source /etc/lsb-release
-    apt-add-repository -y "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-
-    # install and pin
-    apt -y install kubeadm=${K8S_VERSION} kubelet=${K8S_VERSION} kubectl=${K8S_VERSION}
-    apt-mark hold kubeadm kubelet kubectl
-}
 
 
 ##################################################### in-between
@@ -792,10 +822,17 @@ function leave-cluster() {
 doc-kube leave-cluster "undo join-cluster"
 
 
-doc-inspect show-rpms "list relevant rpms"
+doc-inspect show-versions "list relevant versions (from rpm or dpkg)"
+function show-versions() {
+    [[ -f /etc/fedora-release ]] && show-rpms
+    [[ -f /etc/lsb-release ]] && show-debs
+}
 function show-rpms() {
     rpm -qa | egrep 'kube|cri-o|cri-tools'
     #dnf module list cri-o
+}
+function show-debs() {
+    apt list --installed 2> /dev/null | egrep 'kube|cri-'
 }
 doc-inspect clear-rpms "uninstall relevant rpms"
 function clear-rpms() {
