@@ -29,14 +29,14 @@ readonly USER=r2lab
 function load-config() {
     local strict="$1"; shift
 
+    # defaults
     # K8S_VERSION and CRIO_VERSION defined in the configs/ file
-    # for determining the available options:
+
+    # for determining the available versions:
     # K8S_VERSION: use
     # dnf --showduplicates list kubelet --disableexcludes=kubernetes
     # CRIO_VERSION: use
     # dnf module list cri-o
-
-    # defaults
     [[ -f /etc/fedora-release ]] && export K8S_VERSION=1.26.1
     # to figure out the available versions (once the repo is active) do e.g.
     # apt-cache policy kubeadm | grep 1.26
@@ -319,7 +319,7 @@ function install-helm-fedora() {
 }
 function install-helm-ubuntu() {
     curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
-    sudo apt -y install apt-transport-https
+    apt -y install apt-transport-https
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
     apt update
     apt -y install helm
