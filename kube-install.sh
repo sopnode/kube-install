@@ -203,7 +203,7 @@ EOF
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
     [[ -z "${K8S_VERSION}" ]] && {
-        echo need to define K8S_VERSION 
+        echo need to define K8S_VERSION
         exit 1
     }
 
@@ -546,6 +546,11 @@ function cluster-init() {
 
 
 # https://github.com/cri-o/cri-o/issues/4276
+# xxx to check xxx
+# https://wiki.archlinux.org/title/CRI-O suggests that this issue
+# could be solved by simply un-commenting the following line
+# network_dir = "/etc/cni/net.d/"
+# in /etc/crio/crio.conf - that is to say, in the [crio.network] section
 function -wait-for-cni() {
     local cni_dir=/etc/cni/net.d/
     echo "Waiting for CNI files to show up in ${cni_dir}"
