@@ -30,9 +30,9 @@ function load-config() {
     local strict="$1"; shift
 
     # default for all
-    export K8S_VERSION=1.24.2
+    export K8S_VERSION=1.26.1
     # this is a dnf module version number, looks like a subversion is not helping
-    export CRIO_VERSION=1.24
+    export CRIO_VERSION=1.27
     # this is only used to install kubectl-calico
     export CALICOCTL_VERSION=3.24.1
     # counter-intuitively enough, this is what actually
@@ -116,7 +116,7 @@ doc-install prepare-firewall "turn off firewalld - for FIT nodes only"
 
 
 function update-os() {
-    [ -f /etc/fedora-release ] && dnf -y update
+    [ -f /etc/fedora-release ] || [ -f /etc/rocky-release ] && dnf -y update
     [ -f /etc/lsb-release ]    && apt -y update
 }
 doc-install update-os "dnf or apt update"
@@ -173,8 +173,9 @@ function install-calico-plugin() {
 
 # all nodes
 function install-extras() {
+    [ -f /etc/rocky-release ] && dnf -y install git openssl nmap-ncat jq buildah rsync
     [ -f /etc/fedora-release ] && dnf -y install git openssl netcat jq buildah
-    [ -f /etc/lsb-release ]    && apt -y install git openssl netcat # jq
+    [ -f /etc/lsb-release ] && apt -y install git openssl netcat # jq
 
 }
 doc-install install-extras "useful tools"
@@ -185,24 +186,29 @@ doc-install install-extras "useful tools"
 # so now that we focus on fedora, we'll use dnf instead
 function install-helm-alt() {
     cd
-    [ -f /etc/fedora-release ] && dnf -y install openssl
+    dnf -y install openssl
     curl -fsSL -o install-helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
     bash install-helm.sh
     helm version
 }
+function install-helm-dnf() {
+    dnf install -y helm
+}
+
 function uninstall-helm-alt() {
     rm -f /usr/local/bin/helm
 }
 
 function install-helm() {
-    dnf install -y helm
+    [ -f /etc/fedora-release ] && install-helm-dnf
+    [ -f /etc/rocky-release ] && install-helm-alt
 }
 doc-install install-helm "install helm"
 
 
 # all nodes
 function install-k8s() {
-    [ -f /etc/fedora-release ] || {
+    [ -f /etc/fedora-release ] || [ -f /etc/rocky-release ] || {
         $BASH_SOURCE is for fedora only
         exit 1
     }
@@ -617,7 +623,7 @@ doc-kube deploy-dashboard "deploy the k8s web UI on master node"
 ## testing with hello-kubernetes (master only)
 function hello-world() {
     cd
-    [ -f /etc/fedora-release ] && dnf -y install git
+    [ -f /etc/fedora-release ] || [ -f /etc/rocky-release ] && dnf -y install git
     git clone https://github.com/paulbouwer/hello-kubernetes.git
     cd hello-kubernetes
     cd deploy/helm
