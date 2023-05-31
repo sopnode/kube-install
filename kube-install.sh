@@ -97,7 +97,10 @@ EOF
 net.ipv4.ip_forward=1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
-    sysctl -p /etc/sysctl.d/k8s.conf
+  sysctl -p /etc/sysctl.d/k8s.conf
+
+  echo "Disable firewalld now and after reboot"
+  systemctl disable --now firewalld
 }
 doc-install prepare "miscell system-wide required settings"
 
