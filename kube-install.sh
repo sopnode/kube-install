@@ -50,15 +50,24 @@ function load-config() {
     export CALICOCTL_VERSION=${CALICO_VERSION}
 
     if [[ -n "$strict" ]]; then
+        # do not require a config file for the fit nodes
+        local short=$(hostname --short)
         # spot the config file for that host
         local localconfig="$KIDIR/configs/$(hostname --short)-config.sh"
-        [ -f $localconfig ] || {
-            echo "local config $localconfig not found - bye"
+        if [ -f $localconfig ]; then
+            # set -a / set +a is for exporting the variables
+            set -a; source $localconfig; set +a
+        elif [[ "$short" =~ fit[0-9]* ]]; then
+            local index=$(printf "%d" $(echo $short | sed 's/fit//'))
+            export K8S_CLUSTER_NAME=$short
+            export K8S_API_ENDPOINT=$short
+            export K8S_API_ENDPOINT_INTERNAL=$short
+            export K8S_API_ADDVERTISE_IP_1=192.168.3.$index
+            export MASTER_SSH_ADDR_1=root@$short
+        else
+            echo "strict mode requires a config file in $localconfig - bye"
             exit 1
-        }
-
-        # set -a / set +a is for exporting the variables
-        set -a; source $localconfig; set +a
+        fi
     fi
 }
 
